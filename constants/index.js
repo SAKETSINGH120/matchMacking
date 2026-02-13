@@ -1,0 +1,90 @@
+// HTTP Status Codes
+const HTTP_STATUS = {
+  // Success codes
+  OK: 200,
+  CREATED: 201,
+  ACCEPTED: 202,
+  NO_CONTENT: 204,
+
+  // Client error codes
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  CONFLICT: 409,
+  VALIDATION_ERROR: 422,
+  TOO_MANY_REQUESTS: 429,
+
+  // Server error codes
+  INTERNAL_SERVER_ERROR: 500,
+  NOT_IMPLEMENTED: 501,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
+};
+
+// API Response Messages
+const MESSAGES = {
+  // Success messages
+  SUCCESS: "Operation completed successfully",
+  CREATED: "Resource created successfully",
+  UPDATED: "Resource updated successfully",
+  DELETED: "Resource deleted successfully",
+  FETCHED: "Data retrieved successfully",
+
+  // Error messages
+  INTERNAL_ERROR: "Internal server error",
+  NOT_FOUND: "Resource not found",
+  UNAUTHORIZED: "Unauthorized access",
+  FORBIDDEN: "Access forbidden",
+  VALIDATION_ERROR: "Validation failed",
+  DUPLICATE_ENTRY: "Resource already exists",
+  MISSING_FIELDS: "Required fields are missing",
+  INVALID_CREDENTIALS: "Invalid credentials provided",
+  TOKEN_EXPIRED: "Token has expired",
+  TOKEN_INVALID: "Invalid token provided",
+
+  // Rate limiting
+  RATE_LIMIT_EXCEEDED: "Too many requests, please try again later",
+};
+
+// User Roles (to be used when implementing authentication)
+const USER_ROLES = {
+  ADMIN: "admin",
+  MODERATOR: "moderator",
+  USER: "user",
+  GUEST: "guest",
+};
+
+// Database Constants
+const DB_CONSTANTS = {
+  // Connection states
+  CONNECTION_STATES: {
+    DISCONNECTED: 0,
+    CONNECTED: 1,
+    CONNECTING: 2,
+    DISCONNECTING: 3,
+  },
+
+  // Collection names (to maintain consistency)
+  COLLECTIONS: {
+    USERS: "users",
+    SESSIONS: "sessions",
+    LOGS: "logs",
+  },
+};
+
+// Pagination Defaults
+const PAGINATION = {
+  DEFAULT_PAGE: 1,
+  DEFAULT_LIMIT: 10,
+  MAX_LIMIT: 100,
+};
+
+module.exports = {
+  HTTP_STATUS,
+  MESSAGES,
+  USER_ROLES,
+  DB_CONSTANTS,
+  PAGINATION,
+};
