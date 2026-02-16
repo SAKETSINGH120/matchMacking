@@ -98,6 +98,7 @@ module.exports = {
   updateUserById: async (id, updateData) => {
     // Find user by ID
     const user = await User.findById(id);
+    console.log("🚀 ~ user:", user);
 
     if (!user) {
       throw new Error("User not found");

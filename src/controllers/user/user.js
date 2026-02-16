@@ -160,8 +160,8 @@ const userController = {
 
   updateUser: [
     fileUploader([{ name: "photo", maxCount: 1 }], "profiles"),
-    async (req, res) => {
-      const { id } = req.params;
+    async (req, res, next) => {
+      const id = req.user._id;
       const updateData = req.body;
 
       try {
@@ -182,6 +182,7 @@ const userController = {
         }
 
         const updatedUser = await User.updateUserById(id, updateData);
+        console.log("🚀 ~ updatedUser:", updatedUser);
 
         const userData = {
           id: updatedUser._id,

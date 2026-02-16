@@ -22,10 +22,9 @@ router.get(
 );
 
 router.put(
-  "/:id",
-  validator.mongoId("id"),
-  userValidator.updateUser,
+  "/update",
   authenticateUser,
+  userValidator.updateUser,
   userController.updateUser,
 );
 

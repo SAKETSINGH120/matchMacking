@@ -4,6 +4,10 @@ const router = express.Router();
 // Import route modules
 const userRoutes = require("./user.routes");
 const adminRoutes = require("./admin.routes");
+const swipeRoutes = require("./swipe.routes");
+const feedRoutes = require("./feed.routes");
+const subscriptionRoutes = require("./subscription.routes");
+const feedbackRoutes = require("./feedback.routes");
 const asyncHandler = require("../utils/asyncHandler");
 
 // Health check
@@ -22,5 +26,9 @@ router.get(
 // route modules
 router.use("/users", userRoutes);
 router.use("/admin", adminRoutes);
+router.use("/swipes", swipeRoutes);
+router.use("/feed", feedRoutes);
+router.use("/subscriptions", subscriptionRoutes);
+router.use("/feedback", feedbackRoutes);
 
 module.exports = router;
