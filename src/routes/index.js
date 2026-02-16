@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 // Import route modules
-const sampleRoutes = require("./sample.routes");
+const userRoutes = require("./user.routes");
+const adminRoutes = require("./admin.routes");
 const asyncHandler = require("../utils/asyncHandler");
 
 // Health check
@@ -18,7 +19,8 @@ router.get(
   }),
 );
 
-// Mount route modules
-router.use("/", sampleRoutes);
+// route modules
+router.use("/users", userRoutes);
+router.use("/admin", adminRoutes);
 
 module.exports = router;

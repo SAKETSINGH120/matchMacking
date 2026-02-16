@@ -1,26 +1,9 @@
-const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
 const User = require("../models/user/User");
+const Admin = require("../models/admin/admin");
 const APIError = require("../utils/APIError");
 const asyncHandler = require("../utils/asyncHandler");
-const { HTTP_STATUS, MESSAGES, USER_ROLES } = require("../constants");
-
-const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  });
-};
-
-const verifyToken = async (token) => {
-  try {
-    return await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      throw APIError.unauthorized(MESSAGES.TOKEN_EXPIRED);
-    }
-    throw APIError.unauthorized(MESSAGES.TOKEN_INVALID);
-  }
-};
+const { MESSAGES } = require("../constants");
+const { verifyToken } = require("../utils/jwtUtils");
 
 const extractToken = (req) => {
   let token = null;
@@ -49,13 +32,13 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   }
 
   const decoded = await verifyToken(token);
-  const user = await User.findById(decoded.userId).select("+refreshToken");
+  const user = await User.findById(decoded.userId);
 
   if (!user) {
     throw APIError.unauthorized("User no longer exists");
   }
 
-  if (!user.isActive) {
+  if (user.status !== "active") {
     throw APIError.forbidden("Account has been deactivated");
   }
 
@@ -66,16 +49,29 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
 });
 
 const authenticateAdmin = asyncHandler(async (req, res, next) => {
-  await new Promise((resolve, reject) => {
-    authenticateUser(req, res, (error) => {
-      if (error) reject(error);
-      else resolve();
-    });
-  });
+  const token = extractToken(req);
 
-  if (req.user.role !== USER_ROLES.ADMIN) {
+  if (!token) {
+    throw APIError.unauthorized(MESSAGES.UNAUTHORIZED);
+  }
+
+  const decoded = await verifyToken(token);
+  const admin = await Admin.findById(decoded.adminId || decoded.userId);
+
+  if (!admin) {
+    throw APIError.unauthorized("Admin no longer exists");
+  }
+
+  if (admin.status !== "active") {
+    throw APIError.forbidden("Admin account has been blocked");
+  }
+
+  if (admin.role !== "admin") {
     throw APIError.forbidden("Admin access required");
   }
+
+  req.admin = admin;
+  req.token = token;
 
   next();
 });
@@ -83,7 +79,6 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
 module.exports = {
   authenticateUser,
   authenticateAdmin,
-  generateToken,
   verifyToken,
   extractToken,
 };

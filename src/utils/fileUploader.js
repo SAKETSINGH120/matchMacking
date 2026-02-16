@@ -1,6 +1,6 @@
 const multer = require("multer");
 const fs = require("fs");
-const AppError = require("./AppError");
+const APIError = require("./APIError");
 
 const allowedMimeTypes = [
   "image/png",
@@ -44,7 +44,7 @@ const fileUploader = (field, folder) => {
     fileFilter: (req, file, cb) => {
       allowedMimeTypes.includes(file.mimetype)
         ? cb(null, true)
-        : cb(new AppError("Invalid file type", 400));
+        : cb(new APIError("Invalid file type", 400));
     },
     // Uncomment and adjust if you want to set file size limits
     // limits: {

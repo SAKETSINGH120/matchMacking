@@ -13,7 +13,6 @@ class APIResponse {
     const response = {
       success,
       message,
-      timestamp: new Date().toISOString(),
     };
 
     // Add data if provided
