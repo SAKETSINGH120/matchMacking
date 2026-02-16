@@ -3,7 +3,7 @@ const cors = require("cors");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
-const config = require("../config/config");
+const config = require("../../config/config");
 
 // Security middleware configuration
 const securityMiddleware = {

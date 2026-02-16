@@ -35,11 +35,6 @@ router.delete(
 );
 
 // Admin only
-router.get(
-  "/admin-only",
-  auth.verifyToken,
-  auth.requireRole(["admin"]),
-  sampleController.getAdminData,
-);
+router.get("/admin-only", auth.verifyToken, sampleController.getAdminData);
 
 module.exports = router;

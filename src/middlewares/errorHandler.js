@@ -1,5 +1,5 @@
 const APIError = require("../utils/APIError");
-const config = require("../config/config");
+const config = require("../../config/config");
 
 // Global error handling middleware
 const errorHandler = (err, req, res, next) => {

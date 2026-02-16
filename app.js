@@ -1,8 +1,8 @@
 const express = require("express");
-const securityMiddleware = require("./middlewares/security");
-const logger = require("./middlewares/logger");
-const errorHandler = require("./middlewares/errorHandler");
-const routes = require("./routes");
+const securityMiddleware = require("./src/middlewares/security");
+const logger = require("./src/middlewares/logger");
+const errorHandler = require("./src/middlewares/errorHandler");
+const routes = require("./src/routes");
 const config = require("./config/config");
 
 // Initialize Express application

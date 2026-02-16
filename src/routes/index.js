@@ -18,7 +18,7 @@ router.get(
   }),
 );
 
-// Mount sample routes
+// Mount route modules
 router.use("/", sampleRoutes);
 
 module.exports = router;

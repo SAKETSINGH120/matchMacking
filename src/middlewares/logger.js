@@ -1,6 +1,6 @@
 const morgan = require("morgan");
 const chalk = require("chalk");
-const config = require("../config/config");
+const config = require("../../config/config");
 
 // Custom token for colored status codes
 morgan.token("status-colored", (req, res) => {
