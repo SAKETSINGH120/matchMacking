@@ -81,10 +81,47 @@ const PAGINATION = {
   MAX_LIMIT: 100,
 };
 
+// Swipe Actions
+const SWIPE_ACTIONS = {
+  LIKE: "like",
+  DISLIKE: "dislike",
+  SUPERLIKE: "superlike",
+};
+
+// Match Status
+const MATCH_STATUS = {
+  ACTIVE: "active",
+  UNMATCHED: "unmatched",
+  BLOCKED: "blocked",
+};
+
+// Match Types
+const MATCH_TYPE = {
+  SWIPE: "swipe", // created when both users like each other
+  SYSTEM: "system", // created automatically by compatibility engine
+};
+
+// Auto-match: minimum compatibility score (0–100) to create a system match
+const AUTO_MATCH_THRESHOLD = 70;
+
+// Compatibility Score Weights (must sum to 1.0)
+const COMPATIBILITY_WEIGHTS = {
+  INTERESTS: 0.3,
+  LOCATION: 0.25,
+  ACTIVITY: 0.15,
+  LIFESTYLE: 0.15,
+  RELATIONSHIP_GOAL: 0.15,
+};
+
 module.exports = {
   HTTP_STATUS,
   MESSAGES,
   USER_ROLES,
   DB_CONSTANTS,
   PAGINATION,
+  SWIPE_ACTIONS,
+  MATCH_STATUS,
+  MATCH_TYPE,
+  COMPATIBILITY_WEIGHTS,
+  AUTO_MATCH_THRESHOLD,
 };

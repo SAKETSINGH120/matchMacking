@@ -1,12 +1,13 @@
 const User = require("../models/user/User");
 const Swipe = require("../models/swipe/Swipe");
 const mongoose = require("mongoose");
+const compatibilityService = require("./compatibilityService");
 
 /**
  * Feed Service
  * Builds the aggregation pipeline to fetch suggested users for the feed.
  * Excludes already-swiped users, applies gender & age preferences,
- * location proximity, and sorts by last active.
+ * location proximity, and ranks results by compatibility score.
  */
 const feedService = {
   /**
@@ -94,51 +95,75 @@ const feedService = {
       $sort: { lastActiveAt: -1, createdAt: -1 },
     });
 
-    // Pagination via $facet so we get total count + paged data in one query
-    const skip = (page - 1) * limit;
+    // Fetch a larger candidate pool for scoring (up to 200 per page batch)
+    const candidateLimit = Math.min(limit * 5, 200);
 
     pipeline.push({
-      $facet: {
-        metadata: [{ $count: "total" }],
-        users: [
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $project: {
-              name: 1,
-              gender: 1,
-              dob: 1,
-              bio: 1,
-              profilePhoto: 1,
-              education: 1,
-              profession: 1,
-              company: 1,
-              heightCm: 1,
-              languages: 1,
-              interests: 1,
-              isVerified: 1,
-              "location.city": 1,
-              "location.country": 1,
-              lastActiveAt: 1,
-              distanceMeters: 1, // only present when $geoNear is used
-            },
-          },
-        ],
+      $limit: candidateLimit,
+    });
+
+    // Project all fields needed for compatibility scoring
+    pipeline.push({
+      $project: {
+        name: 1,
+        gender: 1,
+        dob: 1,
+        bio: 1,
+        profilePhoto: 1,
+        education: 1,
+        profession: 1,
+        company: 1,
+        heightCm: 1,
+        languages: 1,
+        interests: 1,
+        isVerified: 1,
+        "location.city": 1,
+        "location.country": 1,
+        "location.coordinates": 1,
+        lifestyle: 1,
+        relationshipGoal: 1,
+        lastActiveAt: 1,
+        activityScore: 1,
+        distanceMeters: 1,
       },
     });
 
-    const [result] = await User.aggregate(pipeline);
+    const candidates = await User.aggregate(pipeline);
 
-    const total = result.metadata[0]?.total || 0;
+    // ---- 4. Score each candidate using the compatibility service ----
+    const scored = candidates.map((candidate) => {
+      const distanceKm =
+        candidate.distanceMeters !== undefined
+          ? candidate.distanceMeters / 1000
+          : null;
 
-    // Convert distanceMeters → distanceKm for a cleaner response
-    const users = result.users.map((user) => {
-      if (user.distanceMeters !== undefined) {
-        user.distanceKm = Math.round(user.distanceMeters / 1000);
-        delete user.distanceMeters;
+      const compatibilityScore = compatibilityService.calculateScore(
+        currentUser,
+        candidate,
+        distanceKm,
+      );
+
+      // Convert distance for response
+      if (candidate.distanceMeters !== undefined) {
+        candidate.distanceKm = Math.round(candidate.distanceMeters / 1000);
+        delete candidate.distanceMeters;
       }
-      return user;
+
+      // Remove raw fields not needed in response
+      delete candidate.location?.coordinates;
+      delete candidate.lifestyle;
+      delete candidate.activityScore;
+
+      return { ...candidate, compatibilityScore };
     });
+
+    // ---- 5. Sort by compatibility score (descending) ----
+    scored.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+    // ---- 6. Paginate the scored results ----
+    const total = scored.length;
+    const skip = (page - 1) * limit;
+    const users = scored.slice(skip, skip + limit);
 
     return { users, total, page, limit };
   },

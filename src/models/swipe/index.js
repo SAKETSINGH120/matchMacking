@@ -1,7 +1,7 @@
 const Swipe = require("./Swipe");
 
 module.exports = {
-  // Record a swipe from one user to another
+  // Record a swipe from one user to another (like, dislike, or superlike)
   createSwipe: async (fromUser, toUser, action) => {
     const swipe = await Swipe.findOneAndUpdate(
       { fromUser, toUser },
@@ -11,12 +11,12 @@ module.exports = {
     return swipe;
   },
 
-  // Check if a specific user has already liked the current user
+  // Check if a specific user has already liked (or superliked) the current user
   hasLiked: async (fromUser, toUser) => {
     const swipe = await Swipe.findOne({
       fromUser,
       toUser,
-      action: "like",
+      action: { $in: ["like", "superlike"] },
     }).lean();
     return !!swipe;
   },
@@ -27,5 +27,21 @@ module.exports = {
       .populate("toUser", "name profilePhoto")
       .sort({ createdAt: -1 })
       .lean();
+  },
+
+  // Get users who liked the current user (for premium feature)
+  getLikesReceived: async (userId) => {
+    return Swipe.find({
+      toUser: userId,
+      action: { $in: ["like", "superlike"] },
+    })
+      .populate("fromUser", "name profilePhoto bio interests location.city")
+      .sort({ createdAt: -1 })
+      .lean();
+  },
+
+  // Get swiped user IDs for feed exclusion
+  getSwipedUserIds: async (userId) => {
+    return Swipe.distinct("toUser", { fromUser: userId });
   },
 };

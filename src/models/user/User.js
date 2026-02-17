@@ -29,6 +29,28 @@ const UserModelSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+    lifestyle: {
+      drinking: {
+        type: String,
+        enum: ["never", "rarely", "socially", "regularly"],
+      },
+      smoking: {
+        type: String,
+        enum: ["never", "occasionally", "regularly"],
+      },
+      workout: {
+        type: String,
+        enum: ["never", "sometimes", "often", "daily"],
+      },
+      diet: {
+        type: String,
+        enum: ["veg", "non-veg", "vegan", "no-preference"],
+      },
+    },
+    relationshipGoal: {
+      type: String,
+      enum: ["casual", "serious", "friendship", "marriage"],
+    },
     preferences: {
       interestedIn: {
         type: String,
@@ -68,6 +90,12 @@ const UserModelSchema = new mongoose.Schema(
       default: false,
     },
     profileCompletionPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    activityScore: {
       type: Number,
       default: 0,
       min: 0,
