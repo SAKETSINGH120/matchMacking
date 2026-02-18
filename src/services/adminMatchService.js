@@ -16,7 +16,7 @@ const adminMatchService = {
 
     const [matches, total] = await Promise.all([
       Match.find(filter)
-        .populate("users", "name number profilePhoto gender status")
+        .populate("users", "name number profilePhoto gender status isPremium")
         .sort({ matchedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

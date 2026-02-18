@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const FEEDBACK_TYPES = ["support_ticket", "rating"];
+
 const TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
 const TICKET_CATEGORIES = [
   "bug",
@@ -17,48 +19,43 @@ const FeedbackSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    category: {
+
+    type: {
       type: String,
-      enum: TICKET_CATEGORIES,
+      enum: FEEDBACK_TYPES,
       required: true,
     },
-    subject: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 200,
-    },
-    message: {
-      type: String,
-      required: true,
-      maxlength: 2000,
-    },
-    status: {
-      type: String,
-      enum: TICKET_STATUSES,
-      default: "open",
-    },
-    // Admin's reply when responding to the ticket
-    adminReply: {
-      type: String,
-      maxlength: 2000,
-      default: null,
-    },
+
+    // ── Support ticket fields ──────────────────────────────
+    category: { type: String, enum: TICKET_CATEGORIES },
+    subject: { type: String, trim: true, maxlength: 200 },
+    message: { type: String, maxlength: 2000 },
+    status: { type: String, enum: TICKET_STATUSES, default: "open" },
+    adminReply: { type: String, maxlength: 2000, default: null },
     repliedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
       default: null,
     },
-    repliedAt: {
-      type: Date,
-      default: null,
-    },
+    repliedAt: { type: Date, default: null },
+
+    // ── Rating fields (both submitted together in one call) ─
+    matchId: { type: mongoose.Schema.Types.ObjectId, ref: "Match" },
+    partnerRating: { type: Number, min: 1, max: 5 },
+    platformRating: { type: Number, min: 1, max: 5 },
+    comment: { type: String, maxlength: 1000 },
   },
   { timestamps: true },
 );
 
-// Quick lookups by status and user
+FeedbackSchema.index({ type: 1, createdAt: -1 });
+FeedbackSchema.index({ userId: 1, type: 1 });
 FeedbackSchema.index({ status: 1, createdAt: -1 });
-FeedbackSchema.index({ userId: 1, createdAt: -1 });
+
+// Prevent same user from rating the same match twice
+FeedbackSchema.index(
+  { userId: 1, matchId: 1, type: 1 },
+  { unique: true, partialFilterExpression: { type: "rating" } },
+);
 
 module.exports = mongoose.model("Feedback", FeedbackSchema);

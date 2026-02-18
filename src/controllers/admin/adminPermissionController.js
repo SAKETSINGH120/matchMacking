@@ -27,7 +27,13 @@ const adminPermissionController = {
     }
 
     const permission = await PermissionService.create(req.body);
-    return APIResponse.send(res, true, 201, "Permission created", permission);
+    return APIResponse.send(
+      res,
+      true,
+      201,
+      "Permission created and automatically assigned to super_admin",
+      permission,
+    );
   }),
 
   // PUT /admin/permissions/:id — update a permission

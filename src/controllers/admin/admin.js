@@ -24,8 +24,6 @@ const adminController = {
       }
     }
 
-    console.log("hgkjghkjhgjdf");
-
     try {
       const admin = await Admin.createAdmin({ name, email, password, role });
 

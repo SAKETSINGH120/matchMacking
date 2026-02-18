@@ -170,7 +170,12 @@ router.get(
 router.get(
   "/feedback/stats",
   authorize("feedback", "read"),
-  asyncHandler(adminFeedbackController.getTicketStats),
+  asyncHandler(adminFeedbackController.getStats),
+);
+router.get(
+  "/feedback/ratings",
+  authorize("feedback", "read"),
+  asyncHandler(adminFeedbackController.getRatings),
 );
 router.get(
   "/feedback/:id",

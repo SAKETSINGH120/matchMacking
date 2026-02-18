@@ -3,33 +3,26 @@ const APIError = require("../../utils/APIError");
 const FeedbackModel = require("../../models/feedback/index");
 
 const feedbackController = {
+  // ── Support Tickets ────────────────────────────────────
+
   /**
-   * POST /api/feedback
-   * User submits a support ticket.
+   * POST /api/feedback/ticket
    */
   createTicket: async (req, res, next) => {
     try {
       const { category, subject, message } = req.body;
-
       const ticket = await FeedbackModel.createTicket({
         userId: req.user._id,
         category,
         subject,
         message,
       });
-
       return APIResponse.send(
         res,
         true,
         201,
-        "Support ticket submitted successfully",
-        {
-          id: ticket._id,
-          category: ticket.category,
-          subject: ticket.subject,
-          status: ticket.status,
-          createdAt: ticket.createdAt,
-        },
+        "Support ticket submitted",
+        ticket,
       );
     } catch (error) {
       next(error);
@@ -38,21 +31,14 @@ const feedbackController = {
 
   /**
    * GET /api/feedback/my-tickets
-   * User views their own support tickets.
    */
   getMyTickets: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
       const limit = parseInt(req.query.limit, 10) || 10;
 
-      const result = await FeedbackModel.getTickets({
-        page,
-        limit,
-      });
-
-      // Filter to only the current user's tickets (done via query override)
       const Feedback = require("../../models/feedback/Feedback");
-      const filter = { userId: req.user._id };
+      const filter = { userId: req.user._id, type: "support_ticket" };
 
       const [tickets, total] = await Promise.all([
         Feedback.find(filter)
@@ -63,19 +49,92 @@ const feedbackController = {
         Feedback.countDocuments(filter),
       ]);
 
-      return APIResponse.send(
-        res,
-        true,
-        200,
-        "Your tickets retrieved successfully",
-        tickets,
-        {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      );
+      return APIResponse.send(res, true, 200, "Tickets fetched", tickets, {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ── Rating (partner + platform in one call) ────────────
+
+  /**
+   * POST /api/feedback/rate
+   * Body: { partnerId, matchId, partnerRating, platformRating, comment }
+   * User rates partner AND platform together from one screen.
+   */
+  createRating: async (req, res, next) => {
+    try {
+      const { matchId, partnerRating, platformRating, comment } = req.body;
+
+      const rating = await FeedbackModel.createRating({
+        userId: req.user._id,
+        matchId,
+        partnerRating,
+        platformRating,
+        comment,
+      });
+
+      return APIResponse.send(res, true, 201, "Feedback submitted", rating);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/feedback/my-ratings
+   */
+  getMyRatings: async (req, res, next) => {
+    try {
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 10;
+
+      const result = await FeedbackModel.getMyRatings(req.user._id, {
+        page,
+        limit,
+      });
+      return APIResponse.send(res, true, 200, "Ratings fetched", result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/feedback/partner/:partnerId
+   */
+  getPartnerFeedback: async (req, res, next) => {
+    try {
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 10;
+      const mongoose = require("mongoose");
+
+      const partnerId = new mongoose.Types.ObjectId(req.params.partnerId);
+      const result = await FeedbackModel.getPartnerFeedback(partnerId, {
+        page,
+        limit,
+      });
+      const stats = await FeedbackModel.getPartnerAvgRating(partnerId);
+
+      return APIResponse.send(res, true, 200, "Partner feedback fetched", {
+        ...result,
+        stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/feedback/platform-stats
+   */
+  getPlatformStats: async (req, res, next) => {
+    try {
+      const stats = await FeedbackModel.getPlatformAvgRating();
+      return APIResponse.send(res, true, 200, "Platform stats fetched", stats);
     } catch (error) {
       next(error);
     }

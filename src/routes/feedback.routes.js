@@ -4,17 +4,24 @@ const feedbackController = require("../controllers/feedback/feedback");
 const { feedbackValidator } = require("../controllers/feedback/validator");
 const { authenticateUser } = require("../middlewares/auth");
 
-// All feedback routes require user authentication
 router.use(authenticateUser);
 
-// POST /api/feedback — submit a support ticket
+// ── Support Tickets ──────────────────────────────────────
 router.post(
-  "/",
+  "/ticket",
   feedbackValidator.createTicket,
   feedbackController.createTicket,
 );
-
-// GET /api/feedback/my-tickets — view own tickets
 router.get("/my-tickets", feedbackController.getMyTickets);
+
+// ── Rating (partner + platform in one call) ──────────────
+router.post(
+  "/rate",
+  feedbackValidator.createRating,
+  feedbackController.createRating,
+);
+router.get("/my-ratings", feedbackController.getMyRatings);
+router.get("/partner/:partnerId", feedbackController.getPartnerFeedback);
+router.get("/platform-stats", feedbackController.getPlatformStats);
 
 module.exports = router;
