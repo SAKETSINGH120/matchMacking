@@ -3,37 +3,42 @@ const APIError = require("../../utils/APIError");
 const asyncHandler = require("../../utils/asyncHandler");
 const Admin = require("../../models/admin/index");
 const { generateToken } = require("../../utils/jwtUtils");
+const { ADMIN_ROLES } = require("../../constants");
 
 const adminController = {
   signup: asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
-    console.log("🚀 ~ req.body:", req.body);
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       throw new APIError("All fields are required", 400);
     }
 
+    // Validate admin role if provided
+    if (role) {
+      const validRoles = Object.values(ADMIN_ROLES);
+      if (!validRoles.includes(role)) {
+        throw new APIError(
+          `Invalid role "${role}". Valid admin roles are: ${validRoles.join(", ")}`,
+          400,
+        );
+      }
+    }
+
+    console.log("hgkjghkjhgjdf");
+
     try {
-      const admin = await Admin.createAdmin({ name, email, password });
+      const admin = await Admin.createAdmin({ name, email, password, role });
 
       const token = generateToken({
         adminId: admin._id,
         email: admin.email,
-        role: admin.role,
+        role: admin.role?.name || "admin",
       });
 
-      const adminData = {
+      return APIResponse.send(res, true, 201, "Admin created successfully", {
         ...admin,
         token,
-      };
-
-      return APIResponse.send(
-        res,
-        true,
-        201,
-        "Admin created successfully",
-        adminData,
-      );
+      });
     } catch (error) {
       throw new APIError(error.message || "Signup failed", 500);
     }
@@ -52,15 +57,13 @@ const adminController = {
       const token = generateToken({
         adminId: admin._id,
         email: admin.email,
-        role: admin.role,
+        role: admin.role?.name || "admin",
       });
 
-      const adminData = {
+      return APIResponse.send(res, true, 200, "Login successful", {
         ...admin,
         token,
-      };
-
-      return APIResponse.send(res, true, 200, "Login successful", adminData);
+      });
     } catch (error) {
       throw new APIError(error.message || "Login failed", 401);
     }

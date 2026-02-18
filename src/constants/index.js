@@ -56,6 +56,42 @@ const USER_ROLES = {
   GUEST: "guest",
 };
 
+// Admin Roles
+const ADMIN_ROLES = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  MODERATOR: "moderator",
+};
+
+// All permission sections in the system
+const PERMISSION_SECTIONS = [
+  "dashboard",
+  "analytics",
+  "users",
+  "reports",
+  "matches",
+  "subscriptions",
+  "feedback",
+  "audit_logs",
+  "roles",
+  "permissions",
+];
+
+/**
+ * Default permissions for each role.
+ * Only super_admin gets all permissions automatically.
+ * Other roles start empty - super_admin assigns permissions manually.
+ */
+const DEFAULT_ROLE_PERMISSIONS = {
+  // super_admin gets full access to all sections
+  [ADMIN_ROLES.SUPER_ADMIN]: "*",
+
+  // admin and moderator start with NO permissions
+  // super_admin will assign permissions manually
+  [ADMIN_ROLES.ADMIN]: [],
+  [ADMIN_ROLES.MODERATOR]: [],
+};
+
 // Database Constants
 const DB_CONSTANTS = {
   // Connection states
@@ -117,6 +153,9 @@ module.exports = {
   HTTP_STATUS,
   MESSAGES,
   USER_ROLES,
+  ADMIN_ROLES,
+  PERMISSION_SECTIONS,
+  DEFAULT_ROLE_PERMISSIONS,
   DB_CONSTANTS,
   PAGINATION,
   SWIPE_ACTIONS,

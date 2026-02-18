@@ -48,6 +48,7 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
+// Authenticate admin and populate role + permissions
 const authenticateAdmin = asyncHandler(async (req, res, next) => {
   const token = extractToken(req);
 
@@ -56,7 +57,13 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   }
 
   const decoded = await verifyToken(token);
-  const admin = await Admin.findById(decoded.adminId || decoded.userId);
+
+  const admin = await Admin.findById(decoded.adminId || decoded.userId)
+    .select("-password")
+    .populate({
+      path: "role",
+      populate: { path: "permissions" },
+    });
 
   if (!admin) {
     throw APIError.unauthorized("Admin no longer exists");
@@ -66,8 +73,8 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
     throw APIError.forbidden("Admin account has been blocked");
   }
 
-  if (admin.role !== "admin") {
-    throw APIError.forbidden("Admin access required");
+  if (!admin.role) {
+    throw APIError.forbidden("No role assigned to this admin");
   }
 
   req.admin = admin;
@@ -76,9 +83,63 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
   next();
 });
 
+/**
+ * Authorization middleware — checks section-based CRUD permissions.
+ *
+ * Usage:
+ *   authorize("users", "read")     — admin needs isRead on "users" section
+ *   authorize("users", "create")   — admin needs isCreate on "users" section
+ *   authorize("users", "update")   — admin needs isUpdate on "users" section
+ *   authorize("users", "delete")   — admin needs isDelete on "users" section
+ *
+ * super_admin role bypasses all checks.
+ */
+const authorize = (section, action) => {
+  return (req, res, next) => {
+    const admin = req.admin;
+
+    if (!admin || !admin.role) {
+      throw APIError.forbidden("Access denied — no role assigned");
+    }
+
+    // super_admin bypasses all permission checks
+    if (admin.role.name === "super_admin") {
+      return next();
+    }
+
+    const permissions = admin.role.permissions || [];
+
+    // Find the permission entry for the requested section
+    const perm = permissions.find(
+      (p) => p.sectionName === section && p.isSection === true,
+    );
+
+    if (!perm) {
+      throw APIError.forbidden(`No access to "${section}" section`);
+    }
+
+    // Map action string to the boolean flag
+    const actionMap = {
+      create: perm.isCreate,
+      read: perm.isRead,
+      update: perm.isUpdate,
+      delete: perm.isDelete,
+    };
+
+    if (!actionMap[action]) {
+      throw APIError.forbidden(
+        `You don't have "${action}" permission on "${section}"`,
+      );
+    }
+
+    next();
+  };
+};
+
 module.exports = {
   authenticateUser,
   authenticateAdmin,
+  authorize,
   verifyToken,
   extractToken,
 };
