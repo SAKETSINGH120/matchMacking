@@ -29,8 +29,8 @@ const securityMiddleware = {
 
   // CORS configuration for cross-origin requests
   cors: cors({
-    origin: config.CORS_ORIGIN,
-    credentials: true,
+    origin: "*",
+    credentials: false,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   }),

@@ -8,6 +8,7 @@ const swipeRoutes = require("./swipe.routes");
 const feedRoutes = require("./feed.routes");
 const subscriptionRoutes = require("./subscription.routes");
 const feedbackRoutes = require("./feedback.routes");
+const meetingRoutes = require("./meeting.routes");
 const asyncHandler = require("../utils/asyncHandler");
 
 // Health check
@@ -30,5 +31,6 @@ router.use("/swipes", swipeRoutes);
 router.use("/feed", feedRoutes);
 router.use("/subscriptions", subscriptionRoutes);
 router.use("/feedback", feedbackRoutes);
+router.use("/meetings", meetingRoutes);
 
 module.exports = router;

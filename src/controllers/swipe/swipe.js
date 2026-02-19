@@ -71,6 +71,8 @@ const swipeController = {
               matchId: match._id,
               matchType: "swipe",
               compatibilityScore: score,
+              status: "pending",
+              chatEnabled: false,
             };
           }
 
@@ -81,7 +83,11 @@ const swipeController = {
       return APIResponse.send(res, true, 200, "Swipe recorded successfully", {
         action,
         isMatch,
-        ...(matchData && { match: matchData }),
+        ...(matchData && {
+          match: matchData,
+          message:
+            "Match found! Waiting for admin approval before chat is enabled.",
+        }),
       });
     } catch (error) {
       next(error);
@@ -110,6 +116,9 @@ const swipeController = {
           user: otherUser,
           compatibilityScore: match.compatibilityScore,
           matchedAt: match.matchedAt,
+          status: match.status,
+          chatEnabled: match.chatEnabled,
+          meeting: match.meeting || null,
         };
       });
 
@@ -166,6 +175,42 @@ const swipeController = {
         likes: pendingLikes,
         count: pendingLikes.length,
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/swipes/matches/pending
+   * Get pending matches waiting for admin approval.
+   */
+  getPendingMatches: async (req, res, next) => {
+    const userId = req.user._id;
+
+    try {
+      const matches = await MatchModel.getPendingMatchesForUser(userId);
+
+      const formatted = matches.map((match) => {
+        const otherUser = match.users.find(
+          (u) => u._id.toString() !== userId.toString(),
+        );
+        return {
+          matchId: match._id,
+          matchType: match.matchType,
+          user: otherUser,
+          compatibilityScore: match.compatibilityScore,
+          matchedAt: match.matchedAt,
+          status: "pending",
+        };
+      });
+
+      return APIResponse.send(
+        res,
+        true,
+        200,
+        "Pending matches retrieved successfully",
+        { matches: formatted },
+      );
     } catch (error) {
       next(error);
     }

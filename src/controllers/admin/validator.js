@@ -194,6 +194,59 @@ const adminValidator = {
       .optional()
       .isMongoId()
       .withMessage("Invalid user ID format"),
+    query("status")
+      .optional()
+      .isIn(["pending", "approved", "rejected", "unmatched", "blocked"])
+      .withMessage("Invalid match status"),
+  ]),
+
+  // Approve / reject match body
+  moderateMatch: withErrorHandling([
+    param("id").isMongoId().withMessage("Invalid match ID format"),
+    body("adminNote")
+      .optional()
+      .isString()
+      .isLength({ max: 500 })
+      .withMessage("Admin note must be at most 500 characters"),
+  ]),
+
+  // ── Meeting Management ───────────────────────────────────
+
+  matchIdMeetingParam: withErrorHandling([
+    param("matchId").isMongoId().withMessage("Invalid match ID format"),
+  ]),
+
+  getMeetings: withErrorHandling([
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1, max: 100 })
+      .withMessage("Limit must be 1-100"),
+    query("meetingStatus")
+      .optional()
+      .isIn(["pending", "approved", "rejected", "cancelled", "completed"])
+      .withMessage("Invalid meeting status"),
+  ]),
+
+  moderateMeeting: withErrorHandling([
+    param("matchId").isMongoId().withMessage("Invalid match ID format"),
+    body("adminNote")
+      .optional()
+      .isString()
+      .isLength({ max: 500 })
+      .withMessage("Admin note must be at most 500 characters"),
+  ]),
+
+  updateMeetingStatus: withErrorHandling([
+    param("matchId").isMongoId().withMessage("Invalid match ID format"),
+    body("status")
+      .notEmpty()
+      .withMessage("Status is required")
+      .isIn(["pending", "approved", "rejected", "cancelled", "completed"])
+      .withMessage("Invalid meeting status"),
   ]),
 
   // ── Analytics ────────────────────────────────────────────

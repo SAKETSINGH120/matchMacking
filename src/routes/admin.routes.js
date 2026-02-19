@@ -111,11 +111,49 @@ router.get(
   authorize("matches", "read"),
   asyncHandler(adminMatchController.getMatchStats),
 );
+router.patch(
+  "/matches/:id/approve",
+  authorize("matches", "update"),
+  adminValidator.moderateMatch,
+  asyncHandler(adminMatchController.approveMatch),
+);
+router.patch(
+  "/matches/:id/reject",
+  authorize("matches", "update"),
+  adminValidator.moderateMatch,
+  asyncHandler(adminMatchController.rejectMatch),
+);
 router.delete(
   "/matches/:id",
   authorize("matches", "delete"),
   adminValidator.matchIdParam,
   asyncHandler(adminMatchController.unmatchUsers),
+);
+
+// ── Meeting Management ─────────────────────────────────────
+router.get(
+  "/meetings",
+  authorize("matches", "read"),
+  adminValidator.getMeetings,
+  asyncHandler(adminMatchController.getMeetings),
+);
+router.patch(
+  "/meetings/:matchId/approve",
+  authorize("matches", "update"),
+  adminValidator.moderateMeeting,
+  asyncHandler(adminMatchController.approveMeeting),
+);
+router.patch(
+  "/meetings/:matchId/reject",
+  authorize("matches", "update"),
+  adminValidator.moderateMeeting,
+  asyncHandler(adminMatchController.rejectMeeting),
+);
+router.patch(
+  "/meetings/:matchId/status",
+  authorize("matches", "update"),
+  adminValidator.updateMeetingStatus,
+  asyncHandler(adminMatchController.updateMeetingStatus),
 );
 
 // ── Subscription Management ───────────────────────────────

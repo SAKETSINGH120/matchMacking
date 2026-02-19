@@ -17,6 +17,8 @@ const adminDashboardService = {
   getStats: async () => {
     const [
       totalUsers,
+      totalFemale,
+      totalMale,
       activeUsers,
       blockedUsers,
       deletedUsers,
@@ -29,6 +31,8 @@ const adminDashboardService = {
       ticketCounts,
     ] = await Promise.all([
       User.countDocuments(),
+      User.countDocuments({ geneder: "male" }),
+      User.countDocuments({ geneder: "female" }),
       User.countDocuments({ status: "active" }),
       User.countDocuments({ status: "blocked" }),
       User.countDocuments({ status: "deleted" }),
@@ -44,9 +48,11 @@ const adminDashboardService = {
     return {
       users: {
         total: totalUsers,
+        totalFemale: totalFemale,
+        totalMale: totalMale,
         active: activeUsers,
         blocked: blockedUsers,
-        deleted: deletedUsers,
+        // deleted: deletedUsers,
         premium: premiumUsers,
       },
       engagement: {
@@ -59,8 +65,8 @@ const adminDashboardService = {
       subscriptions: {
         active: activeSubscriptions,
       },
-      reports: reportCounts,
-      feedback: ticketCounts,
+      // reports: reportCounts,
+      // feedback: ticketCounts,
     };
   },
 };
