@@ -2,10 +2,6 @@ const APIResponse = require("../../utils/APIResponse");
 const adminAnalyticsService = require("../../services/adminAnalyticsService");
 
 const adminAnalyticsController = {
-  /**
-   * GET /api/admin/analytics/user-growth?days=30
-   * Daily signup counts over the past N days.
-   */
   getUserGrowth: async (req, res, next) => {
     try {
       const days = parseInt(req.query.days, 10) || 30;
@@ -23,10 +19,6 @@ const adminAnalyticsController = {
     }
   },
 
-  /**
-   * GET /api/admin/analytics/demographics
-   * Gender and age distribution of active users.
-   */
   getDemographics: async (req, res, next) => {
     try {
       const [genderDistribution, ageDistribution] = await Promise.all([
@@ -46,10 +38,6 @@ const adminAnalyticsController = {
     }
   },
 
-  /**
-   * GET /api/admin/analytics/engagement?days=30
-   * Daily swipe and match trends.
-   */
   getEngagementTrends: async (req, res, next) => {
     try {
       const days = parseInt(req.query.days, 10) || 30;
@@ -67,10 +55,6 @@ const adminAnalyticsController = {
     }
   },
 
-  /**
-   * GET /api/admin/analytics/subscriptions?days=30
-   * Daily subscription trends by plan.
-   */
   getSubscriptionTrends: async (req, res, next) => {
     try {
       const days = parseInt(req.query.days, 10) || 30;

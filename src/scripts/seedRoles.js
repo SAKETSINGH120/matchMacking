@@ -1,8 +1,8 @@
 /**
- * Seed Script — Permissions & Roles
- * -----------------------------------
- * Creates section-based permissions and the three system roles
- * (super_admin, admin, moderator) with their assigned permissions.
+ * Seed Script — Roles with Embedded Permissions
+ * -----------------------------------------------
+ * Creates the three system roles (super_admin, admin, moderator)
+ * with permissions embedded directly inside each role.
  *
  * Safe to run multiple times — it upserts, never duplicates.
  *
@@ -11,87 +11,72 @@
 
 const mongoose = require("mongoose");
 const config = require("../../config/config");
-const Permission = require("../models/permission/Permission");
 const Role = require("../models/role/role");
-const {
-  PERMISSION_SECTIONS,
-  DEFAULT_ROLE_PERMISSIONS,
-  ADMIN_ROLES,
-} = require("../constants");
+const { PERMISSION_SECTIONS, ADMIN_ROLES } = require("../constants");
 
 const seed = async () => {
   try {
     await mongoose.connect(config.MONGODB_URI);
     console.log("Connected to database\n");
 
-    // ── 1. Seed Roles ────────────────────────────────────────
-    console.log("Seeding roles...\n");
+    // Build full permissions array (all sections, all CRUD enabled)
+    const fullPermissions = PERMISSION_SECTIONS.map((section) => ({
+      sectionName: section,
+      isCreate: true,
+      isRead: true,
+      isUpdate: true,
+      isDelete: true,
+    }));
 
-    // First, create all section permissions for super_admin
-    const allSectionPermissions = [];
-    for (const section of PERMISSION_SECTIONS) {
-      const perm = await Permission.findOneAndUpdate(
-        { sectionName: section },
-        {
-          $set: {
-            sectionName: section,
-            isSection: true,
-            isCreate: true,
-            isRead: true,
-            isUpdate: true,
-            isDelete: true,
-          },
+    // ── 1. super_admin — full access to everything ─────────
+    await Role.findOneAndUpdate(
+      { name: ADMIN_ROLES.SUPER_ADMIN },
+      {
+        $set: {
+          name: ADMIN_ROLES.SUPER_ADMIN,
+          description:
+            "Full system access - can manage all permissions and roles",
+          permissions: fullPermissions,
+          isDefault: true,
         },
-        { upsert: true, new: true },
-      );
-      allSectionPermissions.push(perm._id);
-      console.log(`  ✓ Section: ${section}`);
-    }
+      },
+      { upsert: true, new: true },
+    );
+    console.log(
+      `  ✓ Role: super_admin (${fullPermissions.length} permissions)`,
+    );
 
-    // Now create roles
-    for (const roleName of Object.values(ADMIN_ROLES)) {
-      const mapping = DEFAULT_ROLE_PERMISSIONS[roleName];
-
-      let permissionDocs;
-
-      if (mapping === "*") {
-        // super_admin gets all section permissions
-        permissionDocs = allSectionPermissions;
-      } else {
-        // Other roles start empty (no permissions)
-        permissionDocs = [];
-      }
-
-      const description =
-        roleName === "super_admin"
-          ? "Full system access - can manage all permissions and roles"
-          : roleName === "admin"
-            ? "Admin role - permissions assigned by super_admin"
-            : "Moderator role - permissions assigned by super_admin";
-
-      await Role.findOneAndUpdate(
-        { name: roleName },
-        {
-          $set: {
-            name: roleName,
-            description,
-            permissions: permissionDocs,
-            isDefault: true,
-          },
+    // ── 2. admin — starts empty (super_admin assigns later) ─
+    await Role.findOneAndUpdate(
+      { name: ADMIN_ROLES.ADMIN },
+      {
+        $set: {
+          name: ADMIN_ROLES.ADMIN,
+          description: "Admin role - permissions assigned by super_admin",
+          permissions: [],
+          isDefault: true,
         },
-        { upsert: true, new: true },
-      );
+      },
+      { upsert: true, new: true },
+    );
+    console.log("  ✓ Role: admin (no permissions - assign manually)");
 
-      console.log(
-        `  → Role: ${roleName} (${
-          permissionDocs.length > 0
-            ? `${permissionDocs.length} permissions`
-            : "no permissions - assign manually"
-        })\n`,
-      );
-    }
+    // ── 3. moderator — starts empty ────────────────────────
+    await Role.findOneAndUpdate(
+      { name: ADMIN_ROLES.MODERATOR },
+      {
+        $set: {
+          name: ADMIN_ROLES.MODERATOR,
+          description: "Moderator role - permissions assigned by super_admin",
+          permissions: [],
+          isDefault: true,
+        },
+      },
+      { upsert: true, new: true },
+    );
+    console.log("  ✓ Role: moderator (no permissions - assign manually)");
 
-    console.log("Seeding completed successfully!");
+    console.log("\nSeeding completed successfully!");
   } catch (err) {
     console.error("Seeding failed:", err.message);
     process.exit(1);

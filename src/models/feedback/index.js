@@ -1,8 +1,6 @@
 const Feedback = require("./Feedback");
 
 module.exports = {
-  // ── Support Ticket ─────────────────────────────────────
-
   createTicket: async ({ userId, category, subject, message }) => {
     return Feedback.create({
       userId,
@@ -75,8 +73,6 @@ module.exports = {
       { open: 0, in_progress: 0, resolved: 0, closed: 0 },
     );
   },
-
-  // ── Rating (partner + platform in one call) ────────────
 
   createRating: async ({
     userId,

@@ -47,19 +47,10 @@ const adminUserService = {
   },
 
   /**
-   * Block a user — sets status to "blocked".
+   * Update user status — sets status to specified value (blocked, active, etc.).
    */
-  blockUser: async (userId) => {
-    return User.findByIdAndUpdate(userId, { status: "blocked" }, { new: true })
-      .select("-otp -__v")
-      .lean();
-  },
-
-  /**
-   * Unblock a user — sets status back to "active".
-   */
-  unblockUser: async (userId) => {
-    return User.findByIdAndUpdate(userId, { status: "active" }, { new: true })
+  updateUserStatus: async (userId, status) => {
+    return User.findByIdAndUpdate(userId, { status }, { new: true })
       .select("-otp -__v")
       .lean();
   },

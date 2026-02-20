@@ -2,11 +2,7 @@ const APIResponse = require("../../utils/APIResponse");
 const AuditLogModel = require("../../models/auditLog/index");
 
 const adminAuditLogController = {
-  /**
-   * GET /api/admin/audit-logs
-   * List admin action logs with optional filters.
-   * Query params: adminId, action, targetType, startDate, endDate, page, limit
-   */
+
   getLogs: async (req, res, next) => {
     try {
       const { adminId, action, targetType, startDate, endDate } = req.query;

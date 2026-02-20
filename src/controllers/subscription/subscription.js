@@ -2,7 +2,6 @@ const APIResponse = require("../../utils/APIResponse");
 const APIError = require("../../utils/APIError");
 const SubscriptionModel = require("../../models/subscription/index");
 
-// Plan configuration — price and duration for each plan
 const PLAN_CONFIG = {
   basic: { price: 9.99, durationDays: 30 },
   gold: { price: 19.99, durationDays: 30 },
@@ -10,23 +9,16 @@ const PLAN_CONFIG = {
 };
 
 const subscriptionController = {
-  /**
-   * POST /api/subscriptions
-   * Activate a subscription after a successful payment.
-   * In production the payment gateway webhook would call this.
-   */
   createSubscription: async (req, res, next) => {
     try {
       const userId = req.user._id;
       const { plan, paymentId } = req.body;
 
-      // Validate that the plan exists in our config
       const planDetails = PLAN_CONFIG[plan];
       if (!planDetails) {
         throw APIError.badRequest(`Invalid plan: ${plan}`);
       }
 
-      // Check if the user already has an active subscription
       const existing = await SubscriptionModel.getActiveSubscription(userId);
       if (existing) {
         throw APIError.conflict(
@@ -62,10 +54,6 @@ const subscriptionController = {
     }
   },
 
-  /**
-   * GET /api/subscriptions/me
-   * Get the current user's active subscription details.
-   */
   getMySubscription: async (req, res, next) => {
     try {
       const userId = req.user._id;
@@ -102,10 +90,6 @@ const subscriptionController = {
     }
   },
 
-  /**
-   * POST /api/subscriptions/cancel
-   * Cancel the current user's active subscription.
-   */
   cancelSubscription: async (req, res, next) => {
     try {
       const userId = req.user._id;
@@ -132,10 +116,6 @@ const subscriptionController = {
     }
   },
 
-  /**
-   * GET /api/subscriptions/plans
-   * Return the available plans and pricing (public info).
-   */
   getPlans: async (req, res, next) => {
     try {
       const plans = Object.entries(PLAN_CONFIG).map(([name, details]) => ({

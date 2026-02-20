@@ -9,6 +9,7 @@ const feedRoutes = require("./feed.routes");
 const subscriptionRoutes = require("./subscription.routes");
 const feedbackRoutes = require("./feedback.routes");
 const meetingRoutes = require("./meeting.routes");
+const chatRoutes = require("./chat.routes");
 const asyncHandler = require("../utils/asyncHandler");
 
 // Health check
@@ -32,5 +33,6 @@ router.use("/feed", feedRoutes);
 router.use("/subscriptions", subscriptionRoutes);
 router.use("/feedback", feedbackRoutes);
 router.use("/meetings", meetingRoutes);
+router.use("/chat", chatRoutes);
 
 module.exports = router;

@@ -1,17 +1,56 @@
-const Message = require("../message/message");
+const Message = require("./message");
 
 module.exports = {
-  sendMessage: async (messageData) => {
-    let message = await Message.create({
-      ...messageData,
+  /**
+   * Save a new message to the database.
+   */
+  createMessage: async ({ matchId, sender, text, messageType = "text" }) => {
+    const message = await Message.create({
+      matchId,
+      sender,
+      text,
+      messageType,
     });
-
     return message.toObject();
   },
 
-  getMessages: async (matchId) => {
-    let message = await Message.find({ matchId: matchId });
+  /**
+   * Get paginated chat history for a match (newest first).
+   */
+  getMessages: async (matchId, { page = 1, limit = 50 } = {}) => {
+    const [messages, total] = await Promise.all([
+      Message.find({ matchId })
+        .populate("sender", "name profilePhoto")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Message.countDocuments({ matchId }),
+    ]);
 
-    return message.toObject();
+    return { messages: messages.reverse(), total, page, limit };
+  },
+
+  /**
+   * Mark all unseen messages in a match as seen (for a specific receiver).
+   * Only marks messages NOT sent by the current user.
+   */
+  markAsSeen: async (matchId, userId) => {
+    const result = await Message.updateMany(
+      { matchId, sender: { $ne: userId }, seen: false },
+      { seen: true, seenAt: new Date() },
+    );
+    return result.modifiedCount;
+  },
+
+  /**
+   * Get count of unseen messages for a user in a match.
+   */
+  getUnseenCount: async (matchId, userId) => {
+    return Message.countDocuments({
+      matchId,
+      sender: { $ne: userId },
+      seen: false,
+    });
   },
 };

@@ -6,31 +6,37 @@ const AuditLogModel = require("../../models/auditLog/index");
 const adminFeedbackController = {
   // ── Support Tickets ────────────────────────────────────
 
-  /**
-   * GET /api/admin/feedback
-   */
   getTickets: async (req, res, next) => {
     try {
       const { status, category } = req.query;
       const page = parseInt(req.query.page, 10) || 1;
       const limit = parseInt(req.query.limit, 10) || 10;
 
-      const result = await FeedbackModel.getTickets({ status, category, page, limit });
-
-      return APIResponse.send(res, true, 200, "Tickets fetched", result.tickets, {
-        total: result.total,
-        page: result.page,
-        limit: result.limit,
-        totalPages: Math.ceil(result.total / result.limit),
+      const result = await FeedbackModel.getTickets({
+        status,
+        category,
+        page,
+        limit,
       });
+
+      return APIResponse.send(
+        res,
+        true,
+        200,
+        "Tickets fetched",
+        result.tickets,
+        {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: Math.ceil(result.total / result.limit),
+        },
+      );
     } catch (error) {
       next(error);
     }
   },
 
-  /**
-   * GET /api/admin/feedback/:id
-   */
   getTicketById: async (req, res, next) => {
     try {
       const ticket = await FeedbackModel.getTicketById(req.params.id);
@@ -41,9 +47,6 @@ const adminFeedbackController = {
     }
   },
 
-  /**
-   * POST /api/admin/feedback/:id/reply
-   */
   replyToTicket: async (req, res, next) => {
     try {
       const { adminReply, status } = req.body;
@@ -71,12 +74,12 @@ const adminFeedbackController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/feedback/:id/status
-   */
   updateTicketStatus: async (req, res, next) => {
     try {
-      const ticket = await FeedbackModel.updateTicketStatus(req.params.id, req.body.status);
+      const ticket = await FeedbackModel.updateTicketStatus(
+        req.params.id,
+        req.body.status,
+      );
       if (!ticket) throw APIError.notFound("Ticket not found");
       return APIResponse.send(res, true, 200, "Status updated", ticket);
     } catch (error) {
@@ -84,10 +87,6 @@ const adminFeedbackController = {
     }
   },
 
-  /**
-   * GET /api/admin/feedback/stats
-   * Ticket counts + platform avg rating in one call.
-   */
   getStats: async (req, res, next) => {
     try {
       const [ticketCounts, platformStats] = await Promise.all([
@@ -104,10 +103,6 @@ const adminFeedbackController = {
     }
   },
 
-  /**
-   * GET /api/admin/feedback/ratings
-   * All user ratings (partner + platform) for admin review.
-   */
   getRatings: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
@@ -120,7 +115,9 @@ const adminFeedbackController = {
         Feedback.find(filter)
           .populate("userId", "name number profilePhoto")
           .populate("matchId")
-          .select("userId matchId partnerRating platformRating comment createdAt")
+          .select(
+            "userId matchId partnerRating platformRating comment createdAt",
+          )
           .sort({ createdAt: -1 })
           .skip((page - 1) * limit)
           .limit(limit)

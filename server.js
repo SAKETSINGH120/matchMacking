@@ -1,6 +1,8 @@
+const http = require("http");
 const app = require("./app");
 const config = require("./config/config");
 const database = require("./config/database");
+const initSocket = require("./src/socket/index");
 
 // Validate environment variables
 try {
@@ -11,12 +13,16 @@ try {
   process.exit(1);
 }
 
-// Start server
-const server = app.listen(config.PORT, () => {
+// Create HTTP server and attach Socket.io
+const server = http.createServer(app);
+const io = initSocket(server, app);
+
+server.listen(config.PORT, () => {
   console.log("Server started successfully");
   console.log(`Server running on port ${config.PORT}`);
   console.log(`Environment: ${config.NODE_ENV}`);
   console.log(`Started at: ${new Date().toISOString()}`);
+  console.log("Socket.io initialized");
 
   if (config.NODE_ENV === "development") {
     console.log(`Server URL: http://localhost:${config.PORT}`);

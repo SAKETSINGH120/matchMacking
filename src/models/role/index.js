@@ -1,29 +1,38 @@
 const Role = require("./role");
 
 module.exports = {
-  // Create a new role
-  create: async (data) => {
-    const existing = await Role.findOne({ name: data.name.toLowerCase() });
-    if (existing) throw new Error(`Role "${data.name}" already exists`);
-    return Role.create(data);
+  /**
+   * Create a new role with inline permissions.
+   * Body: { name, description, permissions: [{ sectionName, isCreate, isRead, isUpdate, isDelete }] }
+   */
+  create: async ({ name, description, permissions = [] }) => {
+    const existing = await Role.findOne({ name: name.toLowerCase() });
+    if (existing) throw new Error(`Role "${name}" already exists`);
+
+    // Deduplicate sections — keep last entry per sectionName
+    const uniquePerms = deduplicatePermissions(permissions);
+
+    return Role.create({ name, description, permissions: uniquePerms });
   },
 
-  // Get all roles with populated permissions
+  // Get all roles
   getAll: async () => {
-    return Role.find().populate("permissions").sort({ createdAt: 1 });
+    return Role.find().sort({ createdAt: 1 });
   },
 
-  // Get one by ID with populated permissions
+  // Get one by ID
   getById: async (id) => {
-    return Role.findById(id).populate("permissions");
+    return Role.findById(id);
   },
 
   // Get one by name
   getByName: async (name) => {
-    return Role.findOne({ name: name.toLowerCase() }).populate("permissions");
+    return Role.findOne({ name: name.toLowerCase() });
   },
 
-  // Update role name / description
+  /**
+   * Update role name, description, and/or permissions.
+   */
   update: async (id, data) => {
     const role = await Role.findById(id);
     if (!role) throw new Error("Role not found");
@@ -32,9 +41,15 @@ module.exports = {
       throw new Error("Cannot rename a system-default role");
     }
 
-    Object.assign(role, data);
+    if (data.name !== undefined) role.name = data.name;
+    if (data.description !== undefined) role.description = data.description;
+
+    if (data.permissions) {
+      role.permissions = deduplicatePermissions(data.permissions);
+    }
+
     await role.save();
-    return Role.findById(id).populate("permissions");
+    return role;
   },
 
   // Delete a role (non-default only)
@@ -44,45 +59,21 @@ module.exports = {
     if (role.isDefault) throw new Error("Cannot delete a system-default role");
     return Role.findByIdAndDelete(id);
   },
-
-  // Set the permissions array on a role (replace all)
-  setPermissions: async (roleId, permissionIds) => {
-    const role = await Role.findById(roleId);
-    if (!role) throw new Error("Role not found");
-    role.permissions = permissionIds;
-    await role.save();
-    return Role.findById(roleId).populate("permissions");
-  },
-
-  // Add permission IDs to a role (idempotent)
-  addPermissions: async (roleId, permissionIds) => {
-    const role = await Role.findById(roleId);
-    if (!role) throw new Error("Role not found");
-
-    const currentIds = role.permissions.map((id) => id.toString());
-    const newIds = permissionIds.filter(
-      (id) => !currentIds.includes(id.toString()),
-    );
-
-    if (newIds.length > 0) {
-      role.permissions.push(...newIds);
-      await role.save();
-    }
-
-    return Role.findById(roleId).populate("permissions");
-  },
-
-  // Remove permission IDs from a role
-  removePermissions: async (roleId, permissionIds) => {
-    const role = await Role.findById(roleId);
-    if (!role) throw new Error("Role not found");
-
-    const removeSet = new Set(permissionIds.map((id) => id.toString()));
-    role.permissions = role.permissions.filter(
-      (id) => !removeSet.has(id.toString()),
-    );
-
-    await role.save();
-    return Role.findById(roleId).populate("permissions");
-  },
 };
+
+/**
+ * Deduplicate permissions by sectionName — keeps the last entry for each section.
+ */
+function deduplicatePermissions(permissions) {
+  const map = new Map();
+  for (const perm of permissions) {
+    map.set(perm.sectionName.toLowerCase(), {
+      sectionName: perm.sectionName.toLowerCase(),
+      isCreate: !!perm.isCreate,
+      isRead: !!perm.isRead,
+      isUpdate: !!perm.isUpdate,
+      isDelete: !!perm.isDelete,
+    });
+  }
+  return Array.from(map.values());
+}

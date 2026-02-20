@@ -2,9 +2,6 @@ const { body, param, query } = require("express-validator");
 const { withErrorHandling } = require("../../utils/requestParamsValidator");
 
 const adminValidator = {
-  // ── User Management ──────────────────────────────────────
-
-  // Validate query params for listing users
   getUsers: withErrorHandling([
     query("page")
       .optional()
@@ -35,6 +32,16 @@ const adminValidator = {
   // Validate userId as a route param
   userIdParam: withErrorHandling([
     param("id").isMongoId().withMessage("Invalid user ID format"),
+  ]),
+
+  // Validate update user status (block/unblock)
+  updateUserStatus: withErrorHandling([
+    param("id").isMongoId().withMessage("Invalid user ID format"),
+    body("action")
+      .notEmpty()
+      .withMessage("Action is required")
+      .isIn(["block", "unblock"])
+      .withMessage("Action must be either block or unblock"),
   ]),
 
   // Validate resolve-report body
@@ -285,6 +292,90 @@ const adminValidator = {
       .optional()
       .isISO8601()
       .withMessage("End date must be a valid ISO 8601 date"),
+  ]),
+
+  // ── Role Management ──────────────────────────────────────
+
+  roleIdParam: withErrorHandling([
+    param("id").isMongoId().withMessage("Invalid role ID format"),
+  ]),
+
+  // Create role with inline permissions
+  createRole: withErrorHandling([
+    body("name")
+      .notEmpty()
+      .withMessage("Role name is required")
+      .isString()
+      .isLength({ min: 2, max: 50 })
+      .withMessage("Role name must be 2-50 characters"),
+    body("description")
+      .optional()
+      .isString()
+      .isLength({ max: 200 })
+      .withMessage("Description must be at most 200 characters"),
+    body("permissions")
+      .optional()
+      .isArray()
+      .withMessage("Permissions must be an array"),
+    body("permissions.*.sectionName")
+      .notEmpty()
+      .withMessage("Each permission must have a sectionName")
+      .isString(),
+    body("permissions.*.isCreate")
+      .optional()
+      .isBoolean()
+      .withMessage("isCreate must be a boolean"),
+    body("permissions.*.isRead")
+      .optional()
+      .isBoolean()
+      .withMessage("isRead must be a boolean"),
+    body("permissions.*.isUpdate")
+      .optional()
+      .isBoolean()
+      .withMessage("isUpdate must be a boolean"),
+    body("permissions.*.isDelete")
+      .optional()
+      .isBoolean()
+      .withMessage("isDelete must be a boolean"),
+  ]),
+
+  // Update role — same validation, all fields optional
+  updateRole: withErrorHandling([
+    param("id").isMongoId().withMessage("Invalid role ID format"),
+    body("name")
+      .optional()
+      .isString()
+      .isLength({ min: 2, max: 50 })
+      .withMessage("Role name must be 2-50 characters"),
+    body("description")
+      .optional()
+      .isString()
+      .isLength({ max: 200 })
+      .withMessage("Description must be at most 200 characters"),
+    body("permissions")
+      .optional()
+      .isArray()
+      .withMessage("Permissions must be an array"),
+    body("permissions.*.sectionName")
+      .notEmpty()
+      .withMessage("Each permission must have a sectionName")
+      .isString(),
+    body("permissions.*.isCreate")
+      .optional()
+      .isBoolean()
+      .withMessage("isCreate must be a boolean"),
+    body("permissions.*.isRead")
+      .optional()
+      .isBoolean()
+      .withMessage("isRead must be a boolean"),
+    body("permissions.*.isUpdate")
+      .optional()
+      .isBoolean()
+      .withMessage("isUpdate must be a boolean"),
+    body("permissions.*.isDelete")
+      .optional()
+      .isBoolean()
+      .withMessage("isDelete must be a boolean"),
   ]),
 };
 

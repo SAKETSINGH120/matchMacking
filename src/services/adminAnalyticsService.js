@@ -3,15 +3,7 @@ const Swipe = require("../models/swipe/Swipe");
 const Match = require("../models/match/Match");
 const Subscription = require("../models/subscription/Subscription");
 
-/**
- * Admin Analytics Service
- * Time-based trends, demographic breakdowns, and engagement metrics.
- */
 const adminAnalyticsService = {
-  /**
-   * User growth — daily signups over a given number of past days.
-   * Returns an array of { date, count } sorted chronologically.
-   */
   getUserGrowth: async (days = 30) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -34,9 +26,6 @@ const adminAnalyticsService = {
     return growth;
   },
 
-  /**
-   * Gender distribution of all active users.
-   */
   getGenderDistribution: async () => {
     const distribution = await User.aggregate([
       { $match: { status: "active" } },
@@ -47,9 +36,6 @@ const adminAnalyticsService = {
     return distribution;
   },
 
-  /**
-   * Age distribution — groups users into age brackets.
-   */
   getAgeDistribution: async () => {
     const now = new Date();
 
@@ -116,9 +102,6 @@ const adminAnalyticsService = {
     return distribution;
   },
 
-  /**
-   * Engagement trends — daily swipes and matches over a time window.
-   */
   getEngagementTrends: async (days = 30) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -171,9 +154,6 @@ const adminAnalyticsService = {
     return { swipes: swipeTrends, matches: matchTrends };
   },
 
-  /**
-   * Subscription trends — daily new subscriptions over a time window.
-   */
   getSubscriptionTrends: async (days = 30) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);

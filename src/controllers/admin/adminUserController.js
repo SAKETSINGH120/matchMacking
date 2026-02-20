@@ -5,11 +5,6 @@ const ReportModel = require("../../models/report/index");
 const AuditLogModel = require("../../models/auditLog/index");
 
 const adminUserController = {
-  /**
-   * GET /api/admin/users
-   * List all users with pagination, search, and filters.
-   * Query params: search, status, gender, isPremium, isVerified, page, limit
-   */
   getUsers: async (req, res, next) => {
     try {
       const { search, status, gender, isPremium, isVerified } = req.query;
@@ -44,10 +39,6 @@ const adminUserController = {
     }
   },
 
-  /**
-   * GET /api/admin/users/:id
-   * Get a single user's details.
-   */
   getUserById: async (req, res, next) => {
     try {
       const user = await adminUserService.getUserById(req.params.id);
@@ -68,29 +59,39 @@ const adminUserController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/users/:id/block
-   * Block a user.
-   */
-  blockUser: async (req, res, next) => {
+  updateUserStatus: async (req, res, next) => {
     try {
-      const user = await adminUserService.blockUser(req.params.id);
+      const { action } = req.body;
+      const userId = req.params.id;
+
+      let user;
+      let message;
+      let auditAction;
+
+      if (action === "block") {
+        user = await adminUserService.updateUserStatus(userId, "blocked");
+        message = "User blocked successfully";
+        auditAction = "block_user";
+      } else if (action === "unblock") {
+        user = await adminUserService.updateUserStatus(userId, "active");
+        message = "User unblocked successfully";
+        auditAction = "unblock_user";
+      }
 
       if (!user) {
         throw APIError.notFound("User not found");
       }
 
-      // Log the admin action
       await AuditLogModel.log({
         adminId: req.admin._id,
-        action: "block_user",
+        action: auditAction,
         targetType: "user",
-        targetId: req.params.id,
-        details: { previousStatus: "active" },
+        targetId: userId,
+        details: { action },
         ipAddress: req.ip,
       });
 
-      return APIResponse.send(res, true, 200, "User blocked successfully", {
+      return APIResponse.send(res, true, 200, message, {
         id: user._id,
         name: user.name,
         status: user.status,
@@ -100,40 +101,6 @@ const adminUserController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/users/:id/unblock
-   * Unblock a user.
-   */
-  unblockUser: async (req, res, next) => {
-    try {
-      const user = await adminUserService.unblockUser(req.params.id);
-
-      if (!user) {
-        throw APIError.notFound("User not found");
-      }
-
-      await AuditLogModel.log({
-        adminId: req.admin._id,
-        action: "unblock_user",
-        targetType: "user",
-        targetId: req.params.id,
-        ipAddress: req.ip,
-      });
-
-      return APIResponse.send(res, true, 200, "User unblocked successfully", {
-        id: user._id,
-        name: user.name,
-        status: user.status,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  /**
-   * PATCH /api/admin/users/:id/deactivate
-   * Soft-delete a user (sets status to "deleted").
-   */
   deactivateUser: async (req, res, next) => {
     try {
       const user = await adminUserService.deactivateUser(req.params.id);
@@ -160,11 +127,6 @@ const adminUserController = {
     }
   },
 
-  /**
-   * GET /api/admin/reports
-   * List reported users with pagination and optional status filter.
-   * Query params: status, page, limit
-   */
   getReports: async (req, res, next) => {
     try {
       const { status } = req.query;
@@ -191,11 +153,6 @@ const adminUserController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/reports/:id/resolve
-   * Resolve or dismiss a report.
-   * Body: { status: "resolved" | "dismissed", adminNote }
-   */
   resolveReport: async (req, res, next) => {
     try {
       const { status, adminNote } = req.body;

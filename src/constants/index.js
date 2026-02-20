@@ -48,7 +48,7 @@ const MESSAGES = {
   RATE_LIMIT_EXCEEDED: "Too many requests, please try again later",
 };
 
-// User Roles (to be used when implementing authentication)
+// User Roles
 const USER_ROLES = {
   ADMIN: "admin",
   MODERATOR: "moderator",
@@ -61,6 +61,7 @@ const ADMIN_ROLES = {
   SUPER_ADMIN: "super_admin",
   ADMIN: "admin",
   MODERATOR: "moderator",
+  AGENT: "agent",
 };
 
 // All permission sections in the system
@@ -77,17 +78,9 @@ const PERMISSION_SECTIONS = [
   "permissions",
 ];
 
-/**
- * Default permissions for each role.
- * Only super_admin gets all permissions automatically.
- * Other roles start empty - super_admin assigns permissions manually.
- */
 const DEFAULT_ROLE_PERMISSIONS = {
-  // super_admin gets full access to all sections
   [ADMIN_ROLES.SUPER_ADMIN]: "*",
 
-  // admin and moderator start with NO permissions
-  // super_admin will assign permissions manually
   [ADMIN_ROLES.ADMIN]: [],
   [ADMIN_ROLES.MODERATOR]: [],
 };
@@ -102,7 +95,6 @@ const DB_CONSTANTS = {
     DISCONNECTING: 3,
   },
 
-  // Collection names (to maintain consistency)
   COLLECTIONS: {
     USERS: "users",
     SESSIONS: "sessions",
@@ -110,21 +102,18 @@ const DB_CONSTANTS = {
   },
 };
 
-// Pagination Defaults
 const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 10,
   MAX_LIMIT: 100,
 };
 
-// Swipe Actions
 const SWIPE_ACTIONS = {
   LIKE: "like",
   DISLIKE: "dislike",
   SUPERLIKE: "superlike",
 };
 
-// Match Status
 const MATCH_STATUS = {
   ACTIVE: "active",
   UNMATCHED: "unmatched",
@@ -133,11 +122,11 @@ const MATCH_STATUS = {
 
 // Match Types
 const MATCH_TYPE = {
-  SWIPE: "swipe", // created when both users like each other
-  SYSTEM: "system", // created automatically by compatibility engine
+  SWIPE: "swipe",
+  SYSTEM: "system",
 };
 
-// Auto-match: minimum compatibility score (0–100) to create a system match
+// Auto-match: minimum compatibility score (0–100)
 const AUTO_MATCH_THRESHOLD = 70;
 
 // Compatibility Score Weights (must sum to 1.0)

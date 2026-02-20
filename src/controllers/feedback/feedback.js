@@ -3,11 +3,6 @@ const APIError = require("../../utils/APIError");
 const FeedbackModel = require("../../models/feedback/index");
 
 const feedbackController = {
-  // ── Support Tickets ────────────────────────────────────
-
-  /**
-   * POST /api/feedback/ticket
-   */
   createTicket: async (req, res, next) => {
     try {
       const { category, subject, message } = req.body;
@@ -29,9 +24,6 @@ const feedbackController = {
     }
   },
 
-  /**
-   * GET /api/feedback/my-tickets
-   */
   getMyTickets: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
@@ -60,13 +52,6 @@ const feedbackController = {
     }
   },
 
-  // ── Rating (partner + platform in one call) ────────────
-
-  /**
-   * POST /api/feedback/rate
-   * Body: { partnerId, matchId, partnerRating, platformRating, comment }
-   * User rates partner AND platform together from one screen.
-   */
   createRating: async (req, res, next) => {
     try {
       const { matchId, partnerRating, platformRating, comment } = req.body;
@@ -85,9 +70,6 @@ const feedbackController = {
     }
   },
 
-  /**
-   * GET /api/feedback/my-ratings
-   */
   getMyRatings: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
@@ -103,9 +85,6 @@ const feedbackController = {
     }
   },
 
-  /**
-   * GET /api/feedback/partner/:partnerId
-   */
   getPartnerFeedback: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
@@ -128,9 +107,6 @@ const feedbackController = {
     }
   },
 
-  /**
-   * GET /api/feedback/platform-stats
-   */
   getPlatformStats: async (req, res, next) => {
     try {
       const stats = await FeedbackModel.getPlatformAvgRating();

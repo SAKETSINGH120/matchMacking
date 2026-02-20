@@ -4,18 +4,10 @@ const feedService = require("../../services/feedService");
 const autoMatchService = require("../../services/autoMatchService");
 
 const feedController = {
-  /**
-   * GET /api/feed
-   * Returns suggested users for the authenticated user.
-   * Applies gender preference, age range, location proximity,
-   * excludes already-swiped users, and ranks by compatibility.
-   * Also triggers auto-matching in the background.
-   */
   getFeed: async (req, res, next) => {
     try {
       const currentUser = req.user;
 
-      // Ensure the user has a complete profile before browsing
       if (!currentUser.gender || !currentUser.dob) {
         throw APIError.badRequest(
           "Please complete your profile (gender and date of birth) before browsing",
@@ -30,11 +22,8 @@ const feedController = {
         limit,
       });
 
-      // Fire-and-forget: run auto-matching in the background on the first page
       if (page === 1) {
-        autoMatchService.generateMatches(currentUser).catch(() => {
-          // Silently swallow so it never affects the feed response
-        });
+        autoMatchService.generateMatches(currentUser).catch(() => {});
       }
 
       return APIResponse.send(

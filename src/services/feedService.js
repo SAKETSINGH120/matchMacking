@@ -3,19 +3,7 @@ const Swipe = require("../models/swipe/Swipe");
 const mongoose = require("mongoose");
 const compatibilityService = require("./compatibilityService");
 
-/**
- * Feed Service
- * Builds the aggregation pipeline to fetch suggested users for the feed.
- * Excludes already-swiped users, applies gender & age preferences,
- * location proximity, and ranks results by compatibility score.
- */
 const feedService = {
-  /**
-   * Get suggested users for a given user
-   * @param {Object} currentUser - The authenticated user document
-   * @param {Object} options - { page, limit }
-   * @returns {Object} { users, total, page, limit }
-   */
   getSuggestedUsers: async (currentUser, { page = 1, limit = 10 }) => {
     const userId = currentUser._id;
 

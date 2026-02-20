@@ -9,7 +9,6 @@ const adminAnalyticsController = require("../controllers/admin/adminAnalyticsCon
 const adminMatchController = require("../controllers/admin/adminMatchController");
 const adminAuditLogController = require("../controllers/admin/adminAuditLogController");
 const adminRoleController = require("../controllers/admin/adminRoleController");
-const adminPermissionController = require("../controllers/admin/adminPermissionController");
 const { adminValidator } = require("../controllers/admin/validator");
 const asyncHandler = require("../utils/asyncHandler");
 const { authenticateAdmin, authorize } = require("../middlewares/auth");
@@ -20,6 +19,9 @@ router.post("/login", asyncHandler(adminController.login));
 
 // ── All routes below require admin authentication ──────────
 router.use(authenticateAdmin);
+
+//profile
+router.get("/profile", asyncHandler(adminController.profile));
 
 // ── Dashboard ──────────────────────────────────────────────
 router.get(
@@ -67,16 +69,10 @@ router.get(
   asyncHandler(adminUserController.getUserById),
 );
 router.patch(
-  "/users/:id/block",
+  "/users/:id/status",
   authorize("users", "update"),
-  adminValidator.userIdParam,
-  asyncHandler(adminUserController.blockUser),
-);
-router.patch(
-  "/users/:id/unblock",
-  authorize("users", "update"),
-  adminValidator.userIdParam,
-  asyncHandler(adminUserController.unblockUser),
+  adminValidator.updateUserStatus,
+  asyncHandler(adminUserController.updateUserStatus),
 );
 router.patch(
   "/users/:id/deactivate",
@@ -243,36 +239,8 @@ router.get(
 );
 
 // ═══════════════════════════════════════════════════════════
-// Permission Management (super_admin only)
-// ═══════════════════════════════════════════════════════════
-router.get(
-  "/permissions",
-  authorize("permissions", "read"),
-  asyncHandler(adminPermissionController.getAll),
-);
-router.get(
-  "/permissions/:id",
-  authorize("permissions", "read"),
-  asyncHandler(adminPermissionController.getById),
-);
-router.post(
-  "/permissions",
-  authorize("permissions", "create"),
-  asyncHandler(adminPermissionController.create),
-);
-router.put(
-  "/permissions/:id",
-  authorize("permissions", "update"),
-  asyncHandler(adminPermissionController.update),
-);
-router.delete(
-  "/permissions/:id",
-  authorize("permissions", "delete"),
-  asyncHandler(adminPermissionController.delete),
-);
-
-// ═══════════════════════════════════════════════════════════
 // Role Management (super_admin only)
+// Permissions are passed inline when creating/updating a role.
 // ═══════════════════════════════════════════════════════════
 router.get(
   "/roles",
@@ -282,34 +250,26 @@ router.get(
 router.get(
   "/roles/:id",
   authorize("roles", "read"),
+  adminValidator.roleIdParam,
   asyncHandler(adminRoleController.getById),
 );
 router.post(
   "/roles",
   authorize("roles", "create"),
+  adminValidator.createRole,
   asyncHandler(adminRoleController.create),
 );
 router.put(
   "/roles/:id",
   authorize("roles", "update"),
+  adminValidator.updateRole,
   asyncHandler(adminRoleController.update),
 );
 router.delete(
   "/roles/:id",
   authorize("roles", "delete"),
+  adminValidator.roleIdParam,
   asyncHandler(adminRoleController.delete),
-);
-
-// Assign / remove permissions on a role
-router.patch(
-  "/roles/:id/permissions",
-  authorize("roles", "update"),
-  asyncHandler(adminRoleController.assignPermissions),
-);
-router.delete(
-  "/roles/:id/permissions",
-  authorize("roles", "update"),
-  asyncHandler(adminRoleController.removePermissions),
 );
 
 module.exports = router;

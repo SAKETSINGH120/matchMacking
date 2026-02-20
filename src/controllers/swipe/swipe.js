@@ -7,22 +7,15 @@ const compatibilityService = require("../../services/compatibilityService");
 const autoMatchService = require("../../services/autoMatchService");
 
 const swipeController = {
-  /**
-   * Handle a swipe action (like, dislike, or superlike)
-   * - Records the swipe
-   * - If both users liked each other, creates a match with compatibility score
-   */
   handleSwipe: async (req, res, next) => {
-    const fromUser = req.user._id; // authenticated user
+    const fromUser = req.user._id;
     const { toUser, action } = req.body;
 
     try {
-      // Prevent users from swiping on themselves
       if (fromUser.toString() === toUser) {
         throw APIError.badRequest("You cannot swipe on yourself");
       }
 
-      // Verify target user exists and is active
       const targetUser = await User.findOne({ _id: toUser, status: "active" })
         .select(
           "interests location lifestyle relationshipGoal lastActiveAt preferences",
@@ -33,29 +26,23 @@ const swipeController = {
         throw APIError.notFound("User not found or inactive");
       }
 
-      // Record the swipe (upsert so re-swipes just update the action)
       await SwipeModel.createSwipe(fromUser, toUser, action);
 
-      // Update activity score for the swiping user
       await User.findByIdAndUpdate(fromUser, {
         lastActiveAt: new Date(),
         $inc: { activityScore: 1 },
       });
 
-      // If the action is "like" or "superlike", check for a mutual match
       let isMatch = false;
       let matchData = null;
 
       if (action === "like" || action === "superlike") {
-        // Did the other user already like us?
         const mutualLike = await SwipeModel.hasLiked(toUser, fromUser);
 
         if (mutualLike) {
-          // Check if a match already exists to prevent duplicates
           const alreadyMatched = await MatchModel.matchExists(fromUser, toUser);
 
           if (!alreadyMatched) {
-            // Calculate compatibility score for the new match
             const score = compatibilityService.calculateScore(
               req.user.toObject ? req.user.toObject() : req.user,
               targetUser,
@@ -94,18 +81,14 @@ const swipeController = {
     }
   },
 
-  /**
-   * Get all active matches for the authenticated user
-   * Query params: ?type=swipe|system (optional — defaults to all)
-   */
   getMatches: async (req, res, next) => {
     const userId = req.user._id;
-    const matchType = req.query.type || null; // "swipe", "system", or null for all
+    const matchType = "system"//req.query.type || null;
 
     try {
       const matches = await MatchModel.getMatchesForUser(userId, matchType);
+      console.log("🚀 ~ matches:", matches)
 
-      // Format matches — exclude current user from the users array
       const formatted = matches.map((match) => {
         const otherUser = match.users.find(
           (u) => u._id.toString() !== userId.toString(),
@@ -134,9 +117,6 @@ const swipeController = {
     }
   },
 
-  /**
-   * Unmatch — deactivate an existing match
-   */
   unmatch: async (req, res, next) => {
     const userId = req.user._id;
     const { matchId } = req.params;
@@ -154,16 +134,12 @@ const swipeController = {
     }
   },
 
-  /**
-   * Get users who liked the current user (premium feature)
-   */
   getLikesReceived: async (req, res, next) => {
     const userId = req.user._id;
 
     try {
       const likes = await SwipeModel.getLikesReceived(userId);
 
-      // Filter out users we already swiped on
       const swipedIds = await SwipeModel.getSwipedUserIds(userId);
       const swipedSet = new Set(swipedIds.map((id) => id.toString()));
 
@@ -180,10 +156,6 @@ const swipeController = {
     }
   },
 
-  /**
-   * GET /api/swipes/matches/pending
-   * Get pending matches waiting for admin approval.
-   */
   getPendingMatches: async (req, res, next) => {
     const userId = req.user._id;
 
@@ -216,18 +188,10 @@ const swipeController = {
     }
   },
 
-  /**
-   * POST /api/swipes/discover
-   * Triggers the auto-match engine for the current user.
-   * Finds users whose interests, preferences, location, lifestyle,
-   * and activity produce a compatibility score above the threshold
-   * and creates "system" matches for them automatically.
-   */
   discoverMatches: async (req, res, next) => {
     try {
       const currentUser = req.user;
 
-      // Ensure the user has minimum profile data
       if (!currentUser.gender || !currentUser.dob) {
         throw APIError.badRequest(
           "Please complete your profile (gender and date of birth) before discovering matches",

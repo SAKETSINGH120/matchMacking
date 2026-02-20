@@ -58,12 +58,10 @@ const authenticateAdmin = asyncHandler(async (req, res, next) => {
 
   const decoded = await verifyToken(token);
 
+  // Permissions are embedded in the Role document — single populate is enough
   const admin = await Admin.findById(decoded.adminId || decoded.userId)
     .select("-password")
-    .populate({
-      path: "role",
-      populate: { path: "permissions" },
-    });
+    .populate("role");
 
   if (!admin) {
     throw APIError.unauthorized("Admin no longer exists");
@@ -110,9 +108,7 @@ const authorize = (section, action) => {
     const permissions = admin.role.permissions || [];
 
     // Find the permission entry for the requested section
-    const perm = permissions.find(
-      (p) => p.sectionName === section && p.isSection === true,
-    );
+    const perm = permissions.find((p) => p.sectionName === section);
 
     if (!perm) {
       throw APIError.forbidden(`No access to "${section}" section`);

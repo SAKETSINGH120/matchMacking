@@ -1,22 +1,39 @@
 const mongoose = require("mongoose");
 
-const MessageModelSchema = mongoose.Schema(
+const MessageSchema = new mongoose.Schema(
   {
     matchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Match",
       required: true,
     },
-    senderId: {
+    sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    message: String,
-    messageType: { type: String, enum: ["text", "image"], default: "text" },
-    seen: { type: Boolean, default: false },
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2000,
+    },
+    messageType: {
+      type: String,
+      enum: ["text", "image"],
+      default: "text",
+    },
+    seen: {
+      type: Boolean,
+      default: false,
+    },
+    seenAt: Date,
   },
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Message", MessageModelSchema);
+// Indexes for fast chat history lookups
+MessageSchema.index({ matchId: 1, createdAt: -1 });
+MessageSchema.index({ matchId: 1, seen: 1 });
+
+module.exports = mongoose.model("Message", MessageSchema);

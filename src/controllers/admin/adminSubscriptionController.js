@@ -4,11 +4,6 @@ const adminSubscriptionService = require("../../services/adminSubscriptionServic
 const AuditLogModel = require("../../models/auditLog/index");
 
 const adminSubscriptionController = {
-  /**
-   * GET /api/admin/subscriptions
-   * List all subscriptions with pagination and filters.
-   * Query params: status, plan, userId, page, limit
-   */
   getSubscriptions: async (req, res, next) => {
     try {
       const { status, plan, userId } = req.query;
@@ -41,10 +36,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * GET /api/admin/subscriptions/premium-users
-   * List all users with an active premium subscription.
-   */
   getPremiumUsers: async (req, res, next) => {
     try {
       const page = parseInt(req.query.page, 10) || 1;
@@ -73,11 +64,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * POST /api/admin/subscriptions/:userId/activate
-   * Manually activate a subscription for a user (admin override).
-   * Body: { plan, durationDays }
-   */
   activateSubscription: async (req, res, next) => {
     try {
       const { userId } = req.params;
@@ -116,10 +102,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/subscriptions/:userId/deactivate
-   * Deactivate (expire) a user's active subscription.
-   */
   deactivateSubscription: async (req, res, next) => {
     try {
       const subscription =
@@ -156,10 +138,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * POST /api/admin/subscriptions/:userId/cancel
-   * Cancel a user's active subscription.
-   */
   cancelSubscription: async (req, res, next) => {
     try {
       const subscription = await adminSubscriptionService.cancelSubscription(
@@ -196,11 +174,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * PATCH /api/admin/subscriptions/:userId/extend
-   * Extend the end date of a user's active subscription.
-   * Body: { extraDays }
-   */
   extendSubscription: async (req, res, next) => {
     try {
       const { extraDays } = req.body;
@@ -241,10 +214,6 @@ const adminSubscriptionController = {
     }
   },
 
-  /**
-   * GET /api/admin/subscriptions/revenue
-   * Get subscription revenue overview stats.
-   */
   getRevenueOverview: async (req, res, next) => {
     try {
       const overview = await adminSubscriptionService.getRevenueOverview();

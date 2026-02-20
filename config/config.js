@@ -20,7 +20,7 @@ const config = {
 
   // Rate limiting configuration
   RATE_LIMIT_WINDOW_MS:
-    parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 0, //15 * 60 * 1000, // 15 minutes
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
 
   // Logging configuration

@@ -21,13 +21,6 @@ const WEIGHTS = {
 };
 
 const compatibilityService = {
-  /**
-   * Main entry — returns an integer score 0–100
-   * @param {Object} userA   – Mongoose user document (or lean object)
-   * @param {Object} userB   – Mongoose user document (or lean object)
-   * @param {Number} [distanceKm] – Pre-computed distance (optional)
-   * @returns {Number}
-   */
   calculateScore(userA, userB, distanceKm = null) {
     const interestsScore = this._interestsScore(userA, userB);
     const locationScore = this._locationScore(userA, userB, distanceKm);
@@ -45,11 +38,8 @@ const compatibilityService = {
     return Math.round(raw * 100);
   },
 
-  // ─── Dimension scorers (each returns 0–1) ───────────────────────
+  //  Dimension scorers (each returns 0–1) , Jaccard similarity on interests arrays
 
-  /**
-   * Jaccard similarity on interests arrays
-   */
   _interestsScore(userA, userB) {
     const a = new Set(
       (userA.interests || []).map((i) => i.toLowerCase().trim()),
@@ -58,7 +48,7 @@ const compatibilityService = {
       (userB.interests || []).map((i) => i.toLowerCase().trim()),
     );
 
-    if (a.size === 0 && b.size === 0) return 0.5; // neutral when both empty
+    if (a.size === 0 && b.size === 0) return 0.5; // neutral
 
     let intersection = 0;
     for (const item of a) {
@@ -69,15 +59,11 @@ const compatibilityService = {
     return union === 0 ? 0 : intersection / union;
   },
 
-  /**
-   * Proximity score — closer = higher.
-   * Uses an inverse-distance curve capped at the user's maxDistanceKm.
-   */
+  //location
   _locationScore(userA, userB, distanceKm) {
     const maxDist = userA.preferences?.maxDistanceKm || 50;
 
     if (distanceKm === null || distanceKm === undefined) {
-      // If both users have coordinates, compute haversine
       const coordsA = userA.location?.coordinates;
       const coordsB = userB.location?.coordinates;
 
@@ -89,14 +75,13 @@ const compatibilityService = {
       ) {
         distanceKm = this._haversineKm(coordsA, coordsB);
       } else {
-        return 0.3; // unknown — assign a low-neutral score
+        return 0.3; // unknown — then assing low score
       }
     }
 
     if (distanceKm <= 0) return 1;
     if (distanceKm >= maxDist) return 0;
 
-    // Inverse linear decay
     return 1 - distanceKm / maxDist;
   },
 
@@ -110,13 +95,11 @@ const compatibilityService = {
     const recencyA = this._recencyValue(userA.lastActiveAt, now);
     const recencyB = this._recencyValue(userB.lastActiveAt, now);
 
-    // Average of both recencies
     return (recencyA + recencyB) / 2;
   },
 
-  /**
-   * Lifestyle compatibility — fraction of non-null lifestyle fields that match.
-   */
+  // Lifestyle compatibility
+
   _lifestyleScore(userA, userB) {
     const fields = ["drinking", "smoking", "workout", "diet"];
     let compared = 0;
@@ -135,10 +118,9 @@ const compatibilityService = {
     return matched / compared;
   },
 
-  /**
-   * Relationship goal alignment — exact match = 1, else 0.
-   * If either hasn't set a goal, return neutral 0.5.
-   */
+  // Relationship goal alignment — exact match = 1, else 0.
+  // If either hasn't set a goal, return neutral 0.5.
+
   _relationshipGoalScore(userA, userB) {
     const goalA = userA.relationshipGoal;
     const goalB = userB.relationshipGoal;
@@ -147,12 +129,9 @@ const compatibilityService = {
     return goalA === goalB ? 1 : 0;
   },
 
-  // ─── Helpers ─────────────────────────────────────────────────────
+  //  Helpers Functions
 
-  /**
-   * Maps lastActiveAt into a 0–1 recency value.
-   * Active within 1 day → 1, within 7 days → 0.7, within 30 → 0.3, else 0.1
-   */
+  // according to last active
   _recencyValue(lastActiveAt, now) {
     if (!lastActiveAt) return 0.1;
     const diffMs = now - new Date(lastActiveAt).getTime();
@@ -166,9 +145,7 @@ const compatibilityService = {
     return 0.1;
   },
 
-  /**
-   * Haversine formula — returns distance in km between two [lng, lat] arrays.
-   */
+  // according to lat long we calculate the distance in kilometers
   _haversineKm([lng1, lat1], [lng2, lat2]) {
     const toRad = (deg) => (deg * Math.PI) / 180;
     const R = 6371; // Earth radius in km

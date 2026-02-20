@@ -68,12 +68,15 @@ const userController = {
         dob: user.dob,
         gender: user.gender,
         bio: user.bio,
+        profilePhoto: user.profilePhoto,
         education: user.education,
         profession: user.profession,
         company: user.company,
         heightCm: user.heightCm,
         languages: user.languages,
         interests: user.interests,
+        lifestyle: user.lifestyle,
+        relationshipGoal: user.relationshipGoal,
         preferences: user.preferences,
         location: user.location,
         privacy: user.privacy,
@@ -138,10 +141,13 @@ const userController = {
         heightCm: user.heightCm,
         languages: user.languages,
         interests: user.interests,
+        lifestyle: user.lifestyle,
+        relationshipGoal: user.relationshipGoal,
         preferences: user.preferences,
         location: user.location,
         privacy: user.privacy,
         isVerified: user.isVerified,
+        isPremium: user.isPremium,
         profileCompletionPercent: user.profileCompletionPercent,
         createdAt: user.createdAt,
       };
@@ -182,7 +188,6 @@ const userController = {
         }
 
         const updatedUser = await User.updateUserById(id, updateData);
-        console.log("🚀 ~ updatedUser:", updatedUser);
 
         const userData = {
           id: updatedUser._id,
@@ -198,6 +203,8 @@ const userController = {
           heightCm: updatedUser.heightCm,
           languages: updatedUser.languages,
           interests: updatedUser.interests,
+          lifestyle: updatedUser.lifestyle,
+          relationshipGoal: updatedUser.relationshipGoal,
           preferences: updatedUser.preferences,
           location: updatedUser.location,
           privacy: updatedUser.privacy,

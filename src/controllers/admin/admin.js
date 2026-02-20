@@ -66,6 +66,20 @@ const adminController = {
       throw new APIError(error.message || "Login failed", 401);
     }
   }),
+  profile: asyncHandler(async (req, res) => {
+    console.log(req);
+    const id = req.admin._id;
+
+    try {
+      const admin = await Admin.getAdminById(id);
+
+      return APIResponse.send(res, true, 200, "Profile Fetched Successfully", {
+        admin,
+      });
+    } catch (error) {
+      throw new APIError(error.message || "Profile fetching failed", 401);
+    }
+  }),
 };
 
 module.exports = adminController;
