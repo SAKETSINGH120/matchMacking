@@ -35,69 +35,65 @@ const adminMatchController = {
     }
   },
 
-  approveMatch: async (req, res, next) => {
+  getMatchById: async (req, res, next) => {
     try {
-      const { adminNote } = req.body;
-      const match = await adminMatchService.approveMatch(
-        req.params.id,
-        req.admin._id,
-        adminNote,
-      );
+      const id = req.params.id;
 
-      if (!match) {
-        throw APIError.notFound("Match not found or not in pending status");
-      }
-
-      await AuditLogModel.log({
-        adminId: req.admin._id,
-        action: "approve_match",
-        targetType: "match",
-        targetId: req.params.id,
-        details: { adminNote },
-        ipAddress: req.ip,
-      });
+      const result = await adminMatchService.getMatchById(id);
 
       return APIResponse.send(
         res,
         true,
         200,
-        "Match approved — chat enabled",
-        match,
+        "Match retrieved successfully",
+        result.match,
       );
     } catch (error) {
       next(error);
     }
   },
 
-  rejectMatch: async (req, res, next) => {
+  // Unified moderation endpoint for both approve and reject
+  moderateMatch: async (req, res, next) => {
     try {
-      const { adminNote } = req.body;
-      const match = await adminMatchService.rejectMatch(
-        req.params.id,
-        req.admin._id,
-        adminNote,
-      );
+      const { action, adminNote } = req.body;
+      const matchId = req.params.id;
+      let match;
+      let message;
+      let auditAction;
+
+      if (action === "approve") {
+        match = await adminMatchService.approveMatch(
+          matchId,
+          req.admin._id,
+          adminNote,
+        );
+        message = "Match approved — chat enabled";
+        auditAction = "approve_match";
+      } else if (action === "reject") {
+        match = await adminMatchService.rejectMatch(
+          matchId,
+          req.admin._id,
+          adminNote,
+        );
+        message = "Match rejected successfully";
+        auditAction = "reject_match";
+      }
 
       if (!match) {
         throw APIError.notFound("Match not found or not in pending status");
       }
 
-      await AuditLogModel.log({
-        adminId: req.admin._id,
-        action: "reject_match",
-        targetType: "match",
-        targetId: req.params.id,
-        details: { adminNote },
-        ipAddress: req.ip,
-      });
+      // await AuditLogModel.log({
+      //   adminId: req.admin._id,
+      //   action: auditAction,
+      //   targetType: "match",
+      //   targetId: matchId,
+      //   details: { action, adminNote },
+      //   ipAddress: req.ip,
+      // });
 
-      return APIResponse.send(
-        res,
-        true,
-        200,
-        "Match rejected successfully",
-        match,
-      );
+      return APIResponse.send(res, true, 200, message, match);
     } catch (error) {
       next(error);
     }

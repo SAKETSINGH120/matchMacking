@@ -32,6 +32,7 @@ const autoMatchService = {
     { threshold = AUTO_MATCH_THRESHOLD, maxMatches = 5 } = {},
   ) => {
     const userId = currentUser._id;
+    console.log("🚀 ~ userId:", userId);
 
     // ── 1. IDs to exclude (already swiped + already matched) ─────────
     const [swipedUserIds, existingMatchDocs] = await Promise.all([
@@ -119,7 +120,7 @@ const autoMatchService = {
         gender: 1,
         dob: 1,
         bio: 1,
-        profilePhoto: 1,
+        primaryImage: 1,
         interests: 1,
         lifestyle: 1,
         relationshipGoal: 1,
@@ -194,13 +195,15 @@ const autoMatchService = {
           matchId: match._id,
           userId: candidate._id,
           name: candidate.name,
-          profilePhoto: candidate.profilePhoto,
+          primaryImage: candidate.primaryImage,
           compatibilityScore: score,
           distanceKm: distanceKm !== null ? Math.round(distanceKm) : null,
           city: candidate.location?.city,
         });
       }
     }
+
+    console.log("newMatches", newMatches);
 
     return {
       newMatches,

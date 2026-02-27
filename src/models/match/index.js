@@ -43,7 +43,7 @@ module.exports = {
     return Match.find(filter)
       .populate(
         "users",
-        "name profilePhoto bio lastActiveAt interests location.city",
+        "name primaryImage bio lastActiveAt interests location.city",
       )
       .sort({ matchedAt: -1 })
       .lean();
@@ -52,7 +52,7 @@ module.exports = {
   // Get pending matches for a user
   getPendingMatchesForUser: async (userId) => {
     return Match.find({ users: userId, status: "pending" })
-      .populate("users", "name profilePhoto bio interests location.city")
+      .populate("users", "name primaryImage bio interests location.city")
       .sort({ matchedAt: -1 })
       .lean();
   },
@@ -70,7 +70,7 @@ module.exports = {
     return Match.findOneAndUpdate({ _id: matchId, status: "pending" }, update, {
       new: true,
     })
-      .populate("users", "name profilePhoto")
+      .populate("users", "name primaryImage")
       .lean();
   },
 
@@ -87,7 +87,7 @@ module.exports = {
     return Match.findOneAndUpdate({ _id: matchId, status: "pending" }, update, {
       new: true,
     })
-      .populate("users", "name profilePhoto")
+      .populate("users", "name primaryImage")
       .lean();
   },
 
@@ -112,8 +112,8 @@ module.exports = {
       },
       { new: true },
     )
-      .populate("users", "name profilePhoto")
-      .populate("meeting.proposedBy", "name profilePhoto")
+      .populate("users", "name primaryImage")
+      .populate("meeting.proposedBy", "name primaryImage")
       .lean();
   },
 
@@ -144,8 +144,8 @@ module.exports = {
       update,
       { new: true },
     )
-      .populate("users", "name profilePhoto")
-      .populate("meeting.proposedBy", "name profilePhoto")
+      .populate("users", "name primaryImage")
+      .populate("meeting.proposedBy", "name primaryImage")
       .lean();
   },
 
@@ -163,8 +163,8 @@ module.exports = {
       update,
       { new: true },
     )
-      .populate("users", "name profilePhoto")
-      .populate("meeting.proposedBy", "name profilePhoto")
+      .populate("users", "name primaryImage")
+      .populate("meeting.proposedBy", "name primaryImage")
       .lean();
   },
 
@@ -179,7 +179,7 @@ module.exports = {
       },
       { new: true },
     )
-      .populate("users", "name profilePhoto")
+      .populate("users", "name ")
       .lean();
   },
 
@@ -201,8 +201,21 @@ module.exports = {
   // Get match by ID
   getMatchById: async (matchId) => {
     return Match.findById(matchId)
-      .populate("users", "name profilePhoto bio")
-      .populate("meeting.proposedBy", "name profilePhoto")
+      .populate("users", "name primaryImage bio")
+      .populate("meeting.proposedBy", "name primaryImage")
+      .lean();
+  },
+
+  // Get all matches that have a meeting for a given user
+  getMatchesWithMeetings: async (userId) => {
+    return Match.find({
+      users: userId,
+      status: "approved",
+      "meeting.status": { $exists: true },
+    })
+      .populate("users", "name primaryImage bio")
+      .populate("meeting.proposedBy", "name primaryImage")
+      .sort({ "meeting.dateTime": -1 })
       .lean();
   },
 };

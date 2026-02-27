@@ -4,8 +4,6 @@ const FeedbackModel = require("../../models/feedback/index");
 const AuditLogModel = require("../../models/auditLog/index");
 
 const adminFeedbackController = {
-  // ── Support Tickets ────────────────────────────────────
-
   getTickets: async (req, res, next) => {
     try {
       const { status, category } = req.query;
@@ -113,8 +111,15 @@ const adminFeedbackController = {
 
       const [ratings, total] = await Promise.all([
         Feedback.find(filter)
-          .populate("userId", "name number profilePhoto")
-          .populate("matchId")
+          .populate("userId", "name number")
+          .populate({
+            path: "matchId",
+            select: "users",
+            populate: {
+              path: "users",
+              select: "name number",
+            },
+          })
           .select(
             "userId matchId partnerRating platformRating comment createdAt",
           )

@@ -19,7 +19,7 @@ const adminSubscriptionService = {
 
     const [subscriptions, total] = await Promise.all([
       Subscription.find(filter)
-        .populate("userId", "name number profilePhoto isPremium")
+        .populate("userId", "name number primaryImage isPremium")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -37,7 +37,7 @@ const adminSubscriptionService = {
     const [users, total] = await Promise.all([
       User.find({ isPremium: true, status: "active" })
         .select(
-          "name number gender profilePhoto isPremium lastActiveAt createdAt",
+          "name number gender primaryImage isPremium lastActiveAt createdAt",
         )
         .sort({ lastActiveAt: -1 })
         .skip((page - 1) * limit)

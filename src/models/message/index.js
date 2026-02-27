@@ -20,7 +20,7 @@ module.exports = {
   getMessages: async (matchId, { page = 1, limit = 50 } = {}) => {
     const [messages, total] = await Promise.all([
       Message.find({ matchId })
-        .populate("sender", "name profilePhoto")
+        .populate("sender", "name primaryImage")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

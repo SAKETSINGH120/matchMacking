@@ -18,7 +18,7 @@ module.exports = {
     const [reports, total] = await Promise.all([
       Report.find(filter)
         .populate("reportedBy", "name number")
-        .populate("reportedUser", "name number profilePhoto status")
+        .populate("reportedUser", "name number primaryImage status")
         .populate("resolvedBy", "name email")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)

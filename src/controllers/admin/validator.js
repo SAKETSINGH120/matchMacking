@@ -207,9 +207,12 @@ const adminValidator = {
       .withMessage("Invalid match status"),
   ]),
 
-  // Approve / reject match body
+  // Moderate match (approve/reject) validation
   moderateMatch: withErrorHandling([
     param("id").isMongoId().withMessage("Invalid match ID format"),
+    body("action")
+      .isIn(["approve", "reject"])
+      .withMessage("Action must be either 'approve' or 'reject'"),
     body("adminNote")
       .optional()
       .isString()
@@ -238,8 +241,12 @@ const adminValidator = {
       .withMessage("Invalid meeting status"),
   ]),
 
+  // Moderate meeting (approve/reject) validation
   moderateMeeting: withErrorHandling([
     param("matchId").isMongoId().withMessage("Invalid match ID format"),
+    body("action")
+      .isIn(["approve", "reject"])
+      .withMessage("Action must be either 'approve' or 'reject'"),
     body("adminNote")
       .optional()
       .isString()

@@ -21,6 +21,7 @@ const feedController = {
         page,
         limit,
       });
+      console.log("🚀 ~ result:", result);
 
       if (page === 1) {
         autoMatchService.generateMatches(currentUser).catch(() => {});

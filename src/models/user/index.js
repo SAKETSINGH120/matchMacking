@@ -96,9 +96,7 @@ module.exports = {
   },
   // Update user by ID
   updateUserById: async (id, updateData) => {
-    // Find user by ID
     const user = await User.findById(id);
-    console.log("🚀 ~ user:", user);
 
     if (!user) {
       throw new Error("User not found");
@@ -122,8 +120,17 @@ module.exports = {
     const filteredUpdateData = { ...updateData };
     protectedFields.forEach((field) => delete filteredUpdateData[field]);
 
-    // Update user data
-    const updatedUser = await User.findByIdAndUpdate(id, filteredUpdateData, {
+    // Pull out secondaryImagePaths — these go into $push, not $set
+    const secondaryImagePaths = filteredUpdateData.secondaryImagePaths || [];
+    delete filteredUpdateData.secondaryImagePaths;
+
+    // Build update operation
+    const updateOp = { $set: filteredUpdateData };
+    if (secondaryImagePaths.length > 0) {
+      updateOp.$push = { secondaryImages: { $each: secondaryImagePaths } };
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateOp, {
       new: true,
       runValidators: true,
     });
@@ -143,10 +150,13 @@ module.exports = {
       throw new Error("User must be verified to upload photos");
     }
 
-    // Add photo to profilePhoto array
+    // Set primary image and push into secondaryImages array
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $push: { profilePhoto: photoPath } },
+      {
+        $set: { primaryImage: photoPath },
+        $push: { secondaryImages: photoPath },
+      },
       { new: true, runValidators: true },
     );
 

@@ -18,7 +18,7 @@ module.exports = {
 
     const [tickets, total] = await Promise.all([
       Feedback.find(filter)
-        .populate("userId", "name number profilePhoto")
+        .populate("userId", "name number primaryImage")
         .populate("repliedBy", "name email")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -32,7 +32,7 @@ module.exports = {
 
   getTicketById: async (ticketId) => {
     return Feedback.findById(ticketId)
-      .populate("userId", "name number profilePhoto")
+      .populate("userId", "name number primaryImage")
       .populate("repliedBy", "name email")
       .lean();
   },
@@ -108,7 +108,7 @@ module.exports = {
 
     const [ratings, total] = await Promise.all([
       Feedback.find(filter)
-        .populate("partnerId", "name profilePhoto")
+        .populate("partnerId", "name primaryImage")
         .select("partnerRating platformRating comment createdAt")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -126,7 +126,7 @@ module.exports = {
 
     const [feedbacks, total] = await Promise.all([
       Feedback.find(filter)
-        .populate("userId", "name profilePhoto")
+        .populate("userId", "name primaryImage")
         .select("partnerRating comment createdAt")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)

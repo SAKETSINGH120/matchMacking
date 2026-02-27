@@ -5,24 +5,22 @@ const { meetingValidator } = require("../controllers/meeting/validator");
 const asyncHandler = require("../utils/asyncHandler");
 const { authenticateUser } = require("../middlewares/auth");
 
-// All meeting routes require authentication
-router.use(authenticateUser);
+// router.use(authenticateUser);
 
-// POST /api/meetings — request a meeting for an approved match
+router.get("/", asyncHandler(meetingController.getMyMeetings));
+
 router.post(
   "/",
   meetingValidator.requestMeeting,
   asyncHandler(meetingController.requestMeeting),
 );
 
-// GET /api/meetings/:matchId — get meeting details for a match
 router.get(
   "/:matchId",
   meetingValidator.matchIdParam,
   asyncHandler(meetingController.getMeeting),
 );
 
-// PATCH /api/meetings/:matchId/cancel — cancel a pending meeting
 router.patch(
   "/:matchId/cancel",
   meetingValidator.matchIdParam,

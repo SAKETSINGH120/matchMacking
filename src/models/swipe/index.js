@@ -24,7 +24,7 @@ module.exports = {
   // Get all swipes made by a user
   getSwipesByUser: async (userId) => {
     return Swipe.find({ fromUser: userId })
-      .populate("toUser", "name profilePhoto")
+      .populate("toUser", "name primaryImage")
       .sort({ createdAt: -1 })
       .lean();
   },
@@ -35,7 +35,7 @@ module.exports = {
       toUser: userId,
       action: { $in: ["like", "superlike"] },
     })
-      .populate("fromUser", "name profilePhoto bio interests location.city")
+      .populate("fromUser", "name primaryImage bio interests location.city")
       .sort({ createdAt: -1 })
       .lean();
   },

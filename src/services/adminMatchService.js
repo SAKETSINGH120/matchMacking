@@ -17,8 +17,8 @@ const adminMatchService = {
 
     const [matches, total] = await Promise.all([
       Match.find(filter)
-        .populate("users", "name number profilePhoto gender status isPremium")
-        .populate("moderatedBy", "name email")
+        .populate("users")
+        // .populate("moderatedBy", "name email")
         .sort({ matchedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -27,6 +27,16 @@ const adminMatchService = {
     ]);
 
     return { matches, total, page, limit };
+  },
+
+  getMatchById: async (matchId) => {
+    const match = await Match.findOne({ _id: matchId })
+      .populate(
+        "users",
+        "name number primaryImage secondaryImages gender status isPremium location",
+      )
+      .populate("moderatedBy", "name email");
+    return { match };
   },
 
   /**
@@ -74,9 +84,9 @@ const adminMatchService = {
 
     const [matches, total] = await Promise.all([
       Match.find(filter)
-        .populate("users", "name number profilePhoto gender")
-        .populate("meeting.proposedBy", "name profilePhoto")
-        .populate("meeting.moderatedBy", "name email")
+        .select("users meeting")
+        .populate("users", "name number primaryImage gender")
+        .populate("meeting.proposedBy", "name primaryImage")
         .sort({ "meeting.dateTime": -1 })
         .skip((page - 1) * limit)
         .limit(limit)

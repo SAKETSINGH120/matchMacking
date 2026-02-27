@@ -3,16 +3,59 @@ const APIError = require("../../utils/APIError");
 const MatchModel = require("../../models/match/index");
 
 const meetingController = {
-  /**
-   * POST /api/meetings
-   * Request a meeting for an approved match.
-   */
+  getMyMeetings: async (req, res, next) => {
+    const userId = req.user._id;
+
+    try {
+      const matches = await MatchModel.getMatchesWithMeetings(userId);
+
+      const meetings = matches.map((match) => {
+        const isProposer =
+          match.meeting.proposedBy?._id?.toString() === userId.toString() ||
+          match.meeting.proposedBy?.toString() === userId.toString();
+
+        const otherUser = match.users.find(
+          (u) => u._id.toString() !== userId.toString(),
+        );
+
+        console.log("🚀 ~ match.meeting.status:", match.meeting.status);
+        if (match.meeting.status !== "approved" && !isProposer) {
+          return {
+            matchId: match._id,
+            // otherUser,
+            meeting: {
+              proposedBy: match.meeting.proposedBy,
+              dateTime: match.meeting.dateTime,
+              notes: match.meeting.notes,
+              status: match.meeting.status,
+            },
+          };
+        }
+
+        return {
+          matchId: match._id,
+          // otherUser,
+          meeting: match.meeting,
+        };
+      });
+
+      return APIResponse.send(
+        res,
+        true,
+        200,
+        "Meetings retrieved successfully",
+        meetings,
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+
   requestMeeting: async (req, res, next) => {
     const userId = req.user._id;
     const { matchId, location, dateTime, notes } = req.body;
 
     try {
-      // Validate dateTime is in the future
       if (new Date(dateTime) <= new Date()) {
         throw APIError.badRequest("Meeting date must be in the future");
       }
@@ -44,10 +87,6 @@ const meetingController = {
     }
   },
 
-  /**
-   * GET /api/meetings/:matchId
-   * Get meeting details for a specific match.
-   */
   getMeeting: async (req, res, next) => {
     const userId = req.user._id;
     const { matchId } = req.params;
@@ -71,7 +110,6 @@ const meetingController = {
         throw APIError.notFound("No meeting request found for this match");
       }
 
-      // If meeting is not approved yet, only the proposer can see details
       const isProposer =
         match.meeting.proposedBy?._id?.toString() === userId.toString() ||
         match.meeting.proposedBy?.toString() === userId.toString();
@@ -81,10 +119,15 @@ const meetingController = {
           res,
           true,
           200,
-          "A meeting request is pending admin approval",
+          "A meeting has been proposed and is awaiting admin approval",
           {
             matchId: match._id,
-            meeting: { status: match.meeting.status },
+            meeting: {
+              proposedBy: match.meeting.proposedBy,
+              dateTime: match.meeting.dateTime,
+              notes: match.meeting.notes,
+              status: match.meeting.status,
+            },
           },
         );
       }
@@ -104,10 +147,6 @@ const meetingController = {
     }
   },
 
-  /**
-   * PATCH /api/meetings/:matchId/cancel
-   * Cancel a pending meeting (only by the proposer).
-   */
   cancelMeeting: async (req, res, next) => {
     const userId = req.user._id;
     const { matchId } = req.params;

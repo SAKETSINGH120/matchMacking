@@ -20,7 +20,7 @@ const AuditLogSchema = new mongoose.Schema(
     },
     targetType: {
       type: String,
-      enum: ["user", "subscription", "report", "feedback"],
+      enum: ["user", "subscription", "report", "feedback", "match"],
       required: true,
     },
     targetId: {

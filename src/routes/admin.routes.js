@@ -9,7 +9,9 @@ const adminAnalyticsController = require("../controllers/admin/adminAnalyticsCon
 const adminMatchController = require("../controllers/admin/adminMatchController");
 const adminAuditLogController = require("../controllers/admin/adminAuditLogController");
 const adminRoleController = require("../controllers/admin/adminRoleController");
+const adminCMSController = require("../controllers/admin/adminCMSController");
 const { adminValidator } = require("../controllers/admin/validator");
+const cmsValidator = require("../controllers/cms/validator");
 const asyncHandler = require("../utils/asyncHandler");
 const { authenticateAdmin, authorize } = require("../middlewares/auth");
 
@@ -98,9 +100,14 @@ router.patch(
 // ── Match Management ───────────────────────────────────────
 router.get(
   "/matches",
-  authorize("matches", "read"),
+  authorize("match", "read"),
   adminValidator.getMatches,
   asyncHandler(adminMatchController.getMatches),
+);
+router.get(
+  "/matches/:id",
+  authorize("match", "read"),
+  asyncHandler(adminMatchController.getMatchById),
 );
 router.get(
   "/matches/stats",
@@ -108,16 +115,10 @@ router.get(
   asyncHandler(adminMatchController.getMatchStats),
 );
 router.patch(
-  "/matches/:id/approve",
+  "/matches/:id/updateStatus",
   authorize("matches", "update"),
   adminValidator.moderateMatch,
-  asyncHandler(adminMatchController.approveMatch),
-);
-router.patch(
-  "/matches/:id/reject",
-  authorize("matches", "update"),
-  adminValidator.moderateMatch,
-  asyncHandler(adminMatchController.rejectMatch),
+  asyncHandler(adminMatchController.moderateMatch),
 );
 router.delete(
   "/matches/:id",
@@ -129,21 +130,15 @@ router.delete(
 // ── Meeting Management ─────────────────────────────────────
 router.get(
   "/meetings",
-  authorize("matches", "read"),
+  // authorize("matches", "read"),
   adminValidator.getMeetings,
   asyncHandler(adminMatchController.getMeetings),
 );
 router.patch(
-  "/meetings/:matchId/approve",
+  "/meetings/:matchId/moderate",
   authorize("matches", "update"),
   adminValidator.moderateMeeting,
-  asyncHandler(adminMatchController.approveMeeting),
-);
-router.patch(
-  "/meetings/:matchId/reject",
-  authorize("matches", "update"),
-  adminValidator.moderateMeeting,
-  asyncHandler(adminMatchController.rejectMeeting),
+  asyncHandler(adminMatchController.moderateMeeting),
 );
 router.patch(
   "/meetings/:matchId/status",
@@ -270,6 +265,31 @@ router.delete(
   authorize("roles", "delete"),
   adminValidator.roleIdParam,
   asyncHandler(adminRoleController.delete),
+);
+
+// ── CMS Management ─────────────────────────────────────────
+router.get(
+  "/cms",
+  authorize("cms", "read"),
+  asyncHandler(adminCMSController.getAll),
+);
+router.get(
+  "/cms/:pageType",
+  authorize("cms", "read"),
+  cmsValidator.pageTypeParam,
+  asyncHandler(adminCMSController.getOne),
+);
+router.post(
+  "/cms",
+  authorize("cms", "create"),
+  cmsValidator.createOrUpdate,
+  asyncHandler(adminCMSController.createOrUpdate),
+);
+router.patch(
+  "/cms/:pageType/toggle",
+  authorize("cms", "update"),
+  cmsValidator.pageTypeParam,
+  asyncHandler(adminCMSController.toggleStatus),
 );
 
 module.exports = router;

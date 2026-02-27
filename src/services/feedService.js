@@ -6,6 +6,7 @@ const compatibilityService = require("./compatibilityService");
 const feedService = {
   getSuggestedUsers: async (currentUser, { page = 1, limit = 10 }) => {
     const userId = currentUser._id;
+    console.log("🚀 ~ userId:", userId);
 
     // ---- 1. Collect IDs the user has already swiped on ----
     const swipedUserIds = await Swipe.distinct("toUser", { fromUser: userId });
@@ -23,6 +24,7 @@ const feedService = {
 
     // Gender preference filter
     const interestedIn = currentUser.preferences?.interestedIn;
+    console.log("🚀 ~ interestedIn:", interestedIn);
     if (interestedIn && interestedIn !== "everyone") {
       matchFilters.gender = interestedIn;
     }
@@ -59,7 +61,9 @@ const feedService = {
       currentUser.location.coordinates[0] !== 0;
 
     const maxDistanceKm = currentUser.preferences?.maxDistanceKm || 50;
+    console.log("🚀 ~ maxDistanceKm:", maxDistanceKm);
 
+    console.log("🚀 ~ hasLocation:", hasLocation);
     if (hasLocation) {
       pipeline.push({
         $geoNear: {
@@ -77,6 +81,8 @@ const feedService = {
       // No location available — fall back to a simple $match
       pipeline.push({ $match: matchFilters });
     }
+
+    console.log("🚀 ~ matchFilters:", matchFilters, "pipeLine", pipeline);
 
     // Sort by last active (most recently active first), then by createdAt
     pipeline.push({
@@ -97,7 +103,7 @@ const feedService = {
         gender: 1,
         dob: 1,
         bio: 1,
-        profilePhoto: 1,
+        primaryImage: 1,
         education: 1,
         profession: 1,
         company: 1,
@@ -117,6 +123,7 @@ const feedService = {
     });
 
     const candidates = await User.aggregate(pipeline);
+    console.log("🚀 ~ candidates:", candidates);
 
     // ---- 4. Score each candidate using the compatibility service ----
     const scored = candidates.map((candidate) => {

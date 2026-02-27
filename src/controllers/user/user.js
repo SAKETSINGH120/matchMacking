@@ -68,7 +68,8 @@ const userController = {
         dob: user.dob,
         gender: user.gender,
         bio: user.bio,
-        profilePhoto: user.profilePhoto,
+        primaryImage: user.primaryImage,
+        secondaryImages: user.secondaryImages,
         education: user.education,
         profession: user.profession,
         company: user.company,
@@ -134,7 +135,8 @@ const userController = {
         dob: user.dob,
         gender: user.gender,
         bio: user.bio,
-        profilePhoto: user.profilePhoto,
+        primaryImage: user.primaryImage,
+        secondaryImages: user.secondaryImages,
         education: user.education,
         profession: user.profession,
         company: user.company,
@@ -165,26 +167,29 @@ const userController = {
   },
 
   updateUser: [
-    fileUploader([{ name: "photo", maxCount: 1 }], "profiles"),
+    fileUploader(
+      [
+        { name: "primaryImage", maxCount: 1 },
+        { name: "secondaryImages", maxCount: 10 },
+      ],
+      "profiles",
+    ),
     async (req, res, next) => {
       const id = req.user._id;
       const updateData = req.body;
 
       try {
-        let photoPath = null;
-
-        if (req.files && req.files.photo) {
-          const photoFile = req.files.photo[0];
-          photoPath = `profiles/${photoFile.filename}`;
+        // Handle primary image upload
+        if (req.files && req.files.primaryImage) {
+          const file = req.files.primaryImage[0];
+          updateData.primaryImage = `${file.destination}/${file.filename}`;
         }
 
-        if (photoPath) {
-          updateData.profilePhoto = updateData.profilePhoto || [];
-          if (Array.isArray(updateData.profilePhoto)) {
-            updateData.profilePhoto.push(photoPath);
-          } else {
-            updateData.profilePhoto = [photoPath];
-          }
+        // Handle secondary images upload (multiple files)
+        if (req.files && req.files.secondaryImages) {
+          updateData.secondaryImagePaths = req.files.secondaryImages.map(
+            (file) => `${file.destination}/${file.filename}`,
+          );
         }
 
         const updatedUser = await User.updateUserById(id, updateData);
@@ -196,7 +201,8 @@ const userController = {
           dob: updatedUser.dob,
           gender: updatedUser.gender,
           bio: updatedUser.bio,
-          profilePhoto: updatedUser.profilePhoto,
+          primaryImage: updatedUser.primaryImage,
+          secondaryImages: updatedUser.secondaryImages,
           education: updatedUser.education,
           profession: updatedUser.profession,
           company: updatedUser.company,
@@ -213,9 +219,10 @@ const userController = {
           updatedAt: updatedUser.updatedAt,
         };
 
-        const message = photoPath
-          ? "User profile and photo updated successfully"
-          : "User updated successfully";
+        const message =
+          updateData.primaryImage || updateData.secondaryImagePaths
+            ? "User profile and photos updated successfully"
+            : "User updated successfully";
 
         return APIResponse.send(res, true, 200, message, userData);
       } catch (error) {
